@@ -21,15 +21,16 @@ public class Service {
                 .orElse(false);
     }
 
-    public boolean signUp(String userName, String password, String email) {
+    public boolean signUp(String userName, String email, String password) {
         if (userRepository.existsByUserNameOrEmail(userName, email)) {
             return false;
         }
 
         User newUser = new User();
         newUser.setUserName(userName);
-        newUser.setPassword(password);
         newUser.setEmail(email);
+        newUser.setPassword(password);
+
 
         userRepository.save(newUser);
 
