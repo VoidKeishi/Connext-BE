@@ -1,0 +1,21 @@
+{
+	"name": "Existing Dockerfile",
+	"build": {
+		// Sets the run context to one level up instead of the .devcontainer folder.
+		"context": "..",
+		"dockerfile": "./Dockerfile",
+		"cacheFrom": "connext:v0.0.1"
+	},
+	"runArgs": [
+		"--network=host"
+	],
+	"appPort": ["1234:1234"],
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+				"GitHub.copilot"
+			]
+        }
+    }
+}
