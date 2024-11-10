@@ -19,26 +19,38 @@ let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
+    async register(userName, password, email, dateOfBirth, nickName) {
+        return this.userService.register(userName, password, email, dateOfBirth, nickName);
+    }
     async loginViaUsername(body) {
         const { userName, password } = body;
-        return this.userService.authenticateViaUsername(userName, password)
+        return await this.userService.authenticateViaUsername(userName, password)
             ? 'Login successful!'
             : 'Invalid username or password!';
     }
     async loginViaEmail(body) {
         const { email, password } = body;
-        return this.userService.authenticateByEmail(email, password)
+        return await this.userService.authenticateViaEmail(email, password)
             ? 'Login successful!'
             : 'Invalid email or password!';
     }
-    async signUp(body) {
-        const { userName, email, password } = body;
-        return this.userService.signUp(userName, email, password)
-            ? 'Sign up successful!'
-            : 'Username or email already exists!';
+    async changeInfo(body) {
+        const { userName, password, email, nickName, avatar_url } = body;
+        return this.userService.changeInfo(userName, password, email, nickName, avatar_url);
     }
 };
 exports.UserController = UserController;
+__decorate([
+    (0, common_1.Post)('register'),
+    __param(0, (0, common_1.Body)('username')),
+    __param(1, (0, common_1.Body)('password')),
+    __param(2, (0, common_1.Body)('email')),
+    __param(3, (0, common_1.Body)('dateOfBirth')),
+    __param(4, (0, common_1.Body)('nickname')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login-via-username'),
     __param(0, (0, common_1.Body)()),
@@ -54,12 +66,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "loginViaEmail", null);
 __decorate([
-    (0, common_1.Post)('sign-up'),
+    (0, common_1.Patch)('update-user-info'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], UserController.prototype, "signUp", null);
+], UserController.prototype, "changeInfo", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [user_service_1.UserService])

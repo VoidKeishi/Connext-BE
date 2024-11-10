@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -10,22 +11,58 @@ export class UserService {
         private userRepository: Repository<User>,
     ) {}
 
-    async authenticateViaUsername(userName: string, password: string): Promise<boolean> {
+    async register(userName: string,
+                   password: string,
+                   email: string,
+                   dateOfBirth: string,
+                   nickName: string
+                   ): Promise<User> {
+        const salt = await bcrypt.genSalt();
+        const passwordHashed = await bcrypt.hash(password, salt);
+
+        const user = this.userRepository.create({
+            userName,
+            passwordHashed: passwordHashed,
+            email,
+            dateOfBirth,
+            nickName
+        });
+        await this.userRepository.save(user);
+        return user;
+    }
+
+    async authenticateViaUsername(userName: string, password: string): Promise<any> {
         const user = await this.userRepository.findOne({ where: { userName } });
-        return user ? user.password === password : false;
+
+        if (user && await bcrypt.compare(password, user.passwordHashed)) {
+            return { username: user.userName };
+        }
+        return null;
     }
 
-    async authenticateByEmail(email: string, password: string): Promise<boolean> {
+    async authenticateViaEmail(email: string, password: string): Promise<any> {
         const user = await this.userRepository.findOne({ where: { email } });
-        return user ? user.password === password : false;
+
+        if (user && await bcrypt.compare(password, user.passwordHashed)) {
+            return { username: user.userName };
+        }
+        return null;
     }
 
-    async signUp(userName: string, email: string, password: string): Promise<boolean> {
-        const exists = await this.userRepository.findOne({ where: [{ userName }, { email }] });
-        if (exists) return false;
+    async changeInfo(
+        userName: string,
+        password: string,
+        email: string,
+        nickName: string,
+        avatar_url: string
+    ): Promise<User> {
+        const user = await this.userRepository.findOne({ where: { userName } });
 
-        const newUser = this.userRepository.create({ userName, email, password });
-        await this.userRepository.save(newUser);
-        return true;
+        user.passwordHashed = password;
+        user.email = email;
+        user.nickname = nickName;
+        user.avatarUrl = avatar_url;
+
+        return await this.userRepository.save(user);
     }
 }

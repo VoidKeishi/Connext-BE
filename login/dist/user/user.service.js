@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const common_1 = require("@nestjs/common");
+const bcrypt = require("bcrypt");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const user_entity_1 = require("./user.entity");
@@ -21,21 +22,40 @@ let UserService = class UserService {
     constructor(userRepository) {
         this.userRepository = userRepository;
     }
+    async register(userName, password, email, dateOfBirth, nickName) {
+        const salt = await bcrypt.genSalt();
+        const passwordHashed = await bcrypt.hash(password, salt);
+        const user = this.userRepository.create({
+            userName,
+            passwordHashed: passwordHashed,
+            email,
+            dateOfBirth,
+            nickName
+        });
+        await this.userRepository.save(user);
+        return user;
+    }
     async authenticateViaUsername(userName, password) {
         const user = await this.userRepository.findOne({ where: { userName } });
-        return user ? user.password === password : false;
+        if (user && await bcrypt.compare(password, user.passwordHashed)) {
+            return { username: user.userName };
+        }
+        return null;
     }
-    async authenticateByEmail(email, password) {
+    async authenticateViaEmail(email, password) {
         const user = await this.userRepository.findOne({ where: { email } });
-        return user ? user.password === password : false;
+        if (user && await bcrypt.compare(password, user.passwordHashed)) {
+            return { username: user.userName };
+        }
+        return null;
     }
-    async signUp(userName, email, password) {
-        const exists = await this.userRepository.findOne({ where: [{ userName }, { email }] });
-        if (exists)
-            return false;
-        const newUser = this.userRepository.create({ userName, email, password });
-        await this.userRepository.save(newUser);
-        return true;
+    async changeInfo(userName, password, email, nickName, avatar_url) {
+        const user = await this.userRepository.findOne({ where: { userName } });
+        user.passwordHashed = password;
+        user.email = email;
+        user.nickname = nickName;
+        user.avatarUrl = avatar_url;
+        return await this.userRepository.save(user);
     }
 };
 exports.UserService = UserService;
@@ -44,4 +64,3 @@ exports.UserService = UserService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository])
 ], UserService);
-//# sourceMappingURL=user.service.js.map
