@@ -6,63 +6,77 @@ import { User } from './user.entity';
 
 @Injectable()
 export class UserService {
-    constructor(
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
-    ) {}
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
-    async register(userName: string,
-                   password: string,
-                   email: string,
-                   dateOfBirth: string,
-                   nickName: string
-                   ): Promise<User> {
-        const salt = await bcrypt.genSalt();
-        const passwordHashed = await bcrypt.hash(password, salt);
+  async register(
+    userName: string,
+    password: string,
+    email: string,
+    dateOfBirth: string,
+    nickName: string,
+  ): Promise<User> {
+    const salt = await bcrypt.genSalt();
+    const passwordHashed = await bcrypt.hash(password, salt);
 
-        const user = this.userRepository.create({
-            userName,
-            passwordHashed: passwordHashed,
-            email,
-            dateOfBirth,
-            nickName
-        });
-        await this.userRepository.save(user);
-        return user;
+    const user = this.userRepository.create({
+      userName,
+      passwordHashed: passwordHashed,
+      email,
+      dateOfBirth,
+      nickName,
+    });
+    await this.userRepository.save(user);
+    return user;
+  }
+
+  async authenticateViaUsername(
+    userName: string,
+    password: string,
+  ): Promise<any> {
+    const user = await this.userRepository.findOne({ where: { userName } });
+
+    if (user && (await bcrypt.compare(password, user.passwordHashed))) {
+      return { username: user.userName };
     }
+    return null;
+  }
 
-    async authenticateViaUsername(userName: string, password: string): Promise<any> {
-        const user = await this.userRepository.findOne({ where: { userName } });
+  async authenticateViaEmail(email: string, password: string): Promise<any> {
+    const user = await this.userRepository.findOne({ where: { email } });
 
-        if (user && await bcrypt.compare(password, user.passwordHashed)) {
-            return { username: user.userName };
-        }
-        return null;
+    if (user && (await bcrypt.compare(password, user.passwordHashed))) {
+      return { username: user.userName };
     }
+    return null;
+  }
 
-    async authenticateViaEmail(email: string, password: string): Promise<any> {
-        const user = await this.userRepository.findOne({ where: { email } });
+  async changeInfo(
+    userName: string,
+    password: string,
+    email: string,
+    nickName: string,
+    avatar_url: string,
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { userName } });
 
-        if (user && await bcrypt.compare(password, user.passwordHashed)) {
-            return { username: user.userName };
-        }
-        return null;
+    user.passwordHashed = password;
+    user.email = email;
+    user.nickname = nickName;
+    user.avatarUrl = avatar_url;
+
+    return await this.userRepository.save(user);
+  }
+
+  async deleteAccount(userName: string, password: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { userName } });
+
+    if (user && (await bcrypt.compare(password, user.passwordHashed))) {
+      await this.userRepository.remove(user);
+      return `Deleted.`;
     }
-
-    async changeInfo(
-        userName: string,
-        password: string,
-        email: string,
-        nickName: string,
-        avatar_url: string
-    ): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { userName } });
-
-        user.passwordHashed = password;
-        user.email = email;
-        user.nickname = nickName;
-        user.avatarUrl = avatar_url;
-
-        return await this.userRepository.save(user);
-    }
+    return `Failed`;
+  }
 }
