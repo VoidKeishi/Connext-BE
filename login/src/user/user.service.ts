@@ -7,16 +7,16 @@ import { User } from './user.entity';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+      @InjectRepository(User)
+      private userRepository: Repository<User>,
   ) {}
 
   async register(
-    userName: string,
-    password: string,
-    email: string,
-    dateOfBirth: string,
-    nickName: string,
+      userName: string,
+      password: string,
+      email: string,
+      dateOfBirth: string,
+      nickName: string,
   ): Promise<User> {
     const salt = await bcrypt.genSalt();
     const passwordHashed = await bcrypt.hash(password, salt);
@@ -33,8 +33,8 @@ export class UserService {
   }
 
   async authenticateViaUsername(
-    userName: string,
-    password: string,
+      userName: string,
+      password: string,
   ): Promise<any> {
     const user = await this.userRepository.findOne({ where: { userName } });
 
@@ -54,17 +54,17 @@ export class UserService {
   }
 
   async changeInfo(
-    userName: string,
-    password: string,
-    email: string,
-    nickName: string,
-    avatar_url: string,
+      userName: string,
+      password: string,
+      email: string,
+      nickName: string,
+      avatar_url: string,
   ): Promise<User> {
     const user = await this.userRepository.findOne({ where: { userName } });
 
     user.passwordHashed = password;
     user.email = email;
-    user.nickname = nickName;
+    user.nickName = nickName;
     user.avatarUrl = avatar_url;
 
     return await this.userRepository.save(user);

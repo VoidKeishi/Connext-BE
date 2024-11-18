@@ -8,18 +8,18 @@ export class UserController {
 
   @Post('register')
   async register(
-    @Body('username') userName: string,
-    @Body('password') password: string,
-    @Body('email') email: string,
-    @Body('dateOfBirth') dateOfBirth: string,
-    @Body('nickname') nickName: string,
+      @Body('username') userName: string,
+      @Body('password') password: string,
+      @Body('email') email: string,
+      @Body('dateOfBirth') dateOfBirth: string,
+      @Body('nickname') nickName: string,
   ) {
     return this.userService.register(
-      userName,
-      password,
-      email,
-      dateOfBirth,
-      nickName,
+        userName,
+        password,
+        email,
+        dateOfBirth,
+        nickName,
     );
   }
 
@@ -27,46 +27,46 @@ export class UserController {
   async loginViaUsername(@Body() body: { userName: string; password: string }) {
     const { userName, password } = body;
     return (await this.userService.authenticateViaUsername(userName, password))
-      ? 'Login successful!'
-      : 'Invalid username or password!';
+        ? 'Login successful!'
+        : 'Invalid username or password!';
   }
 
   @Post('login-via-email')
   async loginViaEmail(@Body() body: { email: string; password: string }) {
     const { email, password } = body;
     return (await this.userService.authenticateViaEmail(email, password))
-      ? 'Login successful!'
-      : 'Invalid email or password!';
+        ? 'Login successful!'
+        : 'Invalid email or password!';
   }
 
   @Patch('update-user-info')
   async changeInfo(
-    @Body()
-    body: {
-      userName?: string;
-      password?: string;
-      email?: string;
-      nickName?: string;
-      avatar_url?: string;
-    },
+      @Body()
+          body: {
+        userName?: string;
+        password?: string;
+        email?: string;
+        nickName?: string;
+        avatar_url?: string;
+      },
   ): Promise<User> {
     const { userName, password, email, nickName, avatar_url } = body;
     return this.userService.changeInfo(
-      userName,
-      password,
-      email,
-      nickName,
-      avatar_url,
+        userName,
+        password,
+        email,
+        nickName,
+        avatar_url,
     );
   }
 
   @Delete('update-user-info')
   async deleteAccount(
-    @Body()
-    body: {
-      userName?: string;
-      password?: string;
-    },
+      @Body()
+          body: {
+        userName?: string;
+        password?: string;
+      },
   ): Promise<string> {
     const { userName, password } = body;
     await this.userService.deleteAccount(userName, password);
