@@ -1,3 +1,6 @@
+import {GroupChat} from "../../../groupChat/groupChat.entity";
+import {GroupMember} from "../../../groupMember/groupMember.entity";
+
 import {
     Entity,
     PrimaryGeneratedColumn,
@@ -5,7 +8,6 @@ import {
     CreateDateColumn,
     UpdateDateColumn, OneToMany,
 } from 'typeorm';
-import {GroupChat} from "../../../groupChat/groupChat.entity";
 
 @Entity('User')
 export class User {
@@ -35,4 +37,7 @@ export class User {
 
     @OneToMany(() => GroupChat, (groupChat) => groupChat.createdBy)
     groupChats: GroupChat[];
+
+    @OneToMany(() => GroupMember, groupMember => groupMember.user)
+    groupMembers: GroupMember[];
 }
