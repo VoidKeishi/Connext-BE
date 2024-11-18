@@ -1,4 +1,5 @@
 import {User} from "../login/src/user/user.entity";
+import {GroupMember} from "../groupMember/groupMember.entity";
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -19,6 +20,9 @@ export class GroupChat {
   @ManyToOne(() => User, (user) => user.groupChats)
   @JoinColumn({ name: 'createdBy' })
   _createdBy: GroupChat;
+
+  @OneToMany(() => GroupMember, groupMember => groupMember.user)
+  groupMembers: GroupMember[];
 
   get groupId(): number {
     return this._groupId;
