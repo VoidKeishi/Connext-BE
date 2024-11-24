@@ -1,34 +1,42 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Controller, Post, Body, Patch, Delete } from '@nestjs/common';
+import { UserService } from './users.service';
+import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
+import { User } from './users.entity';
 
-@Controller('users')
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+@Controller('auth')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Post('register')
+  async register(@Body() createUserDto: CreateUserDto): Promise<string> {
+    return this.userService.register(createUserDto);
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @Post('login-via-username')
+  async loginViaUsername(@Body() body: { userName: string; password: string }) {
+    const { userName, password } = body;
+    return (await this.userService.authenticateViaUsername(userName, password))
+      ? 'Login successful!'
+      : 'Invalid username or password!';
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @Post('login-via-email')
+  async loginViaEmail(@Body() body: { email: string; password: string }) {
+    const { email, password } = body;
+    return (await this.userService.authenticateViaEmail(email, password))
+      ? 'Login successful!'
+      : 'Invalid email or password!';
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Patch('update-user-info')
+  async updateUserInfo(@Body() updateUserDto: UpdateUserDto): Promise<string> {
+    return this.userService.updateUser(updateUserDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Delete('delete-account')
+  async deleteAccount(@Body() body: { userName: string; password: string }): Promise<string> {
+    const { userName, password } = body;
+    return this.userService.deleteAccount(userName, password);
   }
 }
