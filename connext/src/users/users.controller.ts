@@ -9,7 +9,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto): Promise<User> {
+  async register(@Body() createUserDto: CreateUserDto): Promise<string> {
     return this.userService.register(createUserDto);
   }
 
@@ -30,7 +30,7 @@ export class UserController {
   }
 
   @Patch('update-user-info')
-  async updateUserInfo(@Body() updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUserInfo(@Body() updateUserDto: UpdateUserDto): Promise<string> {
     return this.userService.updateUser(updateUserDto);
   }
 
