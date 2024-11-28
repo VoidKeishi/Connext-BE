@@ -1,6 +1,6 @@
 FROM ubuntu:jammy
 
-ENV TZ=Asia/Ho_Chi_Minh
+ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Ho_Chi_Minh
 
 # Update package list
 RUN apt-get update && apt-get upgrade -y && \
