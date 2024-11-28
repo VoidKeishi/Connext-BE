@@ -16,6 +16,11 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | b
     npm i -g @nestjs/cli
     # npm i -D @types/multer
 
+# Install postgresql
+RUN apt-get update && apt-get install -y postgresql postgresql-contrib && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install Zsh
 RUN apt-get update && apt-get install -y zsh && \
     apt-get clean && \
@@ -31,3 +36,15 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
     -p git \
     -p https://github.com/zsh-users/zsh-autosuggestions \
     -p https://github.com/zsh-users/zsh-completions
+
+# Copy the setup script
+COPY setup_postgres.sh /usr/local/bin/
+
+# Make the setup script executable
+RUN chmod +x /usr/local/bin/setup_postgres.sh
+
+# Run the setup script
+RUN /usr/local/bin/setup_postgres.sh
+
+# Start postgresql service
+CMD service postgresql start && tail -f /dev/null
