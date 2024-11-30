@@ -1,5 +1,6 @@
 {
-	"name": "Existing Dockerfile",
+	"name": "Connext-BE",
+	// "image": "connext-be",
 	"build": {
 		// Sets the run context to one level up instead of the .devcontainer folder.
 		"context": "..",
@@ -14,7 +15,10 @@
     "customizations": {
         "vscode": {
             "extensions": [
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"christian-kohler.npm-intellisense",
+				"42Crunch.vscode-openapi",
+				"ms-azuretools.vscode-docker"
 			]
         }
     }

@@ -43,8 +43,5 @@ COPY setup_postgres.sh /usr/local/bin/
 # Make the setup script executable
 RUN chmod +x /usr/local/bin/setup_postgres.sh
 
-# Run the setup script
-RUN /usr/local/bin/setup_postgres.sh
-
-# Start postgresql service
-CMD service postgresql start && tail -f /dev/null
+# Start PostgreSQL server and run the setup script
+CMD ["bash", "-c", "service postgresql start && /usr/local/bin/setup_postgres.sh && tail -f /dev/null"]
