@@ -1,12 +1,52 @@
 import { Module } from '@nestjs/common';
 import { MessagesModule } from './messages/messages.module';
-import { UsersModule } from './users/users.module';
 import { FriendsModule } from './friends/friends.module';
 import { GroupChatModule } from './group-chat/group-chat.module';
 import { CallsModule } from './calls/calls.module';
 import { AuthModule } from './auth/auth.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [MessagesModule, UsersModule, FriendsModule, GroupChatModule, CallsModule, AuthModule],
+  imports: [
+    MessagesModule,
+    FriendsModule,
+    GroupChatModule,
+    CallsModule,
+    AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: true,
+      buildSchemaOptions: {
+        numberScalarMode: 'integer',
+      }
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('PGHOST'),
+        port: configService.get('PGPORT'),
+        username: configService.get('PGUSER'),
+        password: configService.get('PGPASSWORD'),
+        database: configService.get('PGDATABASE'),
+        autoLoadEntities: true,
+        synchronize: true, // Setting synchronize: true shouldn't be used in production - otherwise you can lose production data.
+        extra: {
+          ssl: true,
+        },
+        retryAttempts: 20,
+        retryDelay: 3000,
+      }),
+      inject: [ConfigService],
+    }),
+    UsersModule,
+  ],
 })
 export class AppModule {}
