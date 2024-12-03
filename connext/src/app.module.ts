@@ -4,28 +4,14 @@ import { FriendsModule } from './friends/friends.module';
 import { GroupChatModule } from './group-chat/group-chat.module';
 import { CallsModule } from './calls/calls.module';
 import { AuthModule } from './auth/auth.module';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    MessagesModule,
-    FriendsModule,
-    GroupChatModule,
-    CallsModule,
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
-    }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      autoSchemaFile: true,
-      buildSchemaOptions: {
-        numberScalarMode: 'integer',
-      }
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -46,6 +32,11 @@ import { UsersModule } from './users/users.module';
       }),
       inject: [ConfigService],
     }),
+    MessagesModule,
+    FriendsModule,
+    GroupChatModule,
+    CallsModule,
+    AuthModule,
     UsersModule,
   ],
 })
