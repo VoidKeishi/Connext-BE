@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 export class UserRepository {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User> 
   ) {}
 
   async findAllUser(): Promise<User[]> {

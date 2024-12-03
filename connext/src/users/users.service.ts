@@ -1,20 +1,20 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRepository } from './repositories/users.repositories';
-import { User } from './entities/user.entity';
+import { UserRepository } from './repositories/user.repository';
+import excludeObjectKeys from 'src/common/utils/excludeObjectKeys';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UserRepository) {}
+  constructor(private readonly usersRepository: UserRepository) { }
 
   async findOne(userId: number) {
     const foundUser = await this.usersRepository.findOneById(userId)
     if (!foundUser) throw new NotFoundException("No user found!")
-    
-    return foundUser
+
+    return excludeObjectKeys(foundUser, ['passwordHashed'])
   }
 
-  async updateUser(userId: number, updateUserData: UpdateUserDto): Promise<User> {    
+  async updateUser(userId: number, updateUserData: UpdateUserDto) {
     const foundUser = await this.usersRepository.findOneById(userId)
     if (!foundUser) throw new NotFoundException("No user found!")
 
@@ -22,8 +22,7 @@ export class UsersService {
     if (!updateResult) throw new InternalServerErrorException("Oops! Something went wrong")
 
     const updatedUser = await this.usersRepository.findOneById(userId)
-    updatedUser.dateOfBirth = new Date(updatedUser.dateOfBirth)
-    return updatedUser
+    return excludeObjectKeys(updatedUser, ['passwordHashed'])
   }
 
   async deleteUser(userId: number) {
