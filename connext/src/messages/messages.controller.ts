@@ -1,34 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { MessagesService } from './messages.service';
-import { CreateMessageDto } from './dto/send-message.dto';
-import { UpdateMessageDto } from './dto/receive-message.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { MESSAGE_EVENT } from 'src/common/constants/event.constant';
 
 @Controller('messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) { }
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
-  @Post()
-  create(@Body() createMessageDto: CreateMessageDto) {
-    return this.messagesService.create(createMessageDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.messagesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messagesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messagesService.update(+id, updateMessageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.messagesService.remove(+id);
+  @Post('send')
+  async createNewMessage(@Body() createMessageDto: CreateMessageDto) {
+    const response =
+      await this.messagesService.createNewMessage(createMessageDto);
+    this.eventEmitter.emit(MESSAGE_EVENT.SEND_MESSAGE, response);
+    return;
   }
 }
