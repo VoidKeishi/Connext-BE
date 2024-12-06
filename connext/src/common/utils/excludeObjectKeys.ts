@@ -1,4 +1,4 @@
-const excludeObjectKeys = (obj, excludeKeys: string[]) => {
+export const excludeObjectKeys = (obj, excludeKeys: string[]) => {
   let newObj = {}
   Object.keys(obj).forEach((key) => { 
     if (!excludeKeys.includes(key)) {

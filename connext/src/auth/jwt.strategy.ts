@@ -4,6 +4,7 @@ import * as jwt from 'jsonwebtoken'
 type Payload = {
   email: string,
   user_id: number,
+  role: 'user' | 'admin',
 }
 
 export const jwtSign = (payload: Payload, secretKey: string, expiresIn: string) => {

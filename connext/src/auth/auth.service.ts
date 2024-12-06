@@ -1,64 +1,92 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRepository } from 'src/users/repositories/user.repository';
+import * as bcrypt from 'bcrypt';
+import { jwtSign } from './jwt.strategy';
+import { excludeObjectKeys } from 'src/common/utils/excludeObjectKeys';
+import { ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE } from 'src/common/constants/jwt.constant';
+import { MessagesConstant } from 'src/common/constants/messages.constant';
+import { ErrorsConstant } from 'src/common/constants/errors.constant';
+import { Role } from './role-enum';
 
 @Injectable()
 export class AuthService {
-  private ACCESS_TOKEN_KEY: string
-  private REFRESH_TOKEN_KEY: string
+  private ACCESS_TOKEN_KEY: string;
+  private REFRESH_TOKEN_KEY: string;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly userRepository: UserRepository, // Use this to query to User table in Database
+    private readonly userRepository: UserRepository,
   ) {
-    this.ACCESS_TOKEN_KEY = this.configService.get<string>('AT_SECRET_KEY')
-    this.REFRESH_TOKEN_KEY = this.configService.get<string>('RT_SECRET_KEY')
+    this.ACCESS_TOKEN_KEY = this.configService.get<string>('AT_SECRET_KEY');
+    this.REFRESH_TOKEN_KEY = this.configService.get<string>('RT_SECRET_KEY');
   }
 
-  async signin({ email, password }) {
-    // TODO: Check if user exist in Database using email. If not, throw new NotFoundException
-    
-    // TODO: Check if password is correct. If not, throw new BadRequestExecption
+  async signin({ userName, email, password }: { userName?: string; email?: string; password: string }) {
+    const user = email
+      ? await this.userRepository.findOneByEmail(email)
+      : await this.userRepository.findOneByUserName(userName);
 
-    // TODO: Construct payload for JWT. Check the Payload type in jwt.strategy.ts
+    if (!user) {
+      throw new NotFoundException(ErrorsConstant.ERROR_USER_NOT_FOUND);
+    }
 
-    // TODO: Use the jwtSign function in jwt.strategy.ts to generate access token.
-    // Remember to provide the correct secret key and the correct expire time.
-    // You can find the expire time of each token using the constant in jwt.constant.ts in common/constants
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHashed);
+    if (!isPasswordValid) {
+      throw new BadRequestException(ErrorsConstant.ERROR_INVALID_CREDENTIALS);
+    }
 
-    // TODO: Use the jwtSign function in jwt.strategy.ts to generate refresh token
-    // Remember to provide the correct secret key and the correct expire time.
-    // You can find the expire time of each token using the constant in jwt.constant.ts in common/constants
-    
-    // TODO: Return access token, refresh token and user information that exclude the password
-    // You can use the excludeObjectKeys.ts file to exclude the password
-    // Checkout how to use it in the findOne service of Users Module
+    const payload = { user_id: user.userId, email: user.email, role: user.role };
+
+    const accessToken = jwtSign(payload, this.ACCESS_TOKEN_KEY, ACCESS_TOKEN_EXPIRE);
+    const refreshToken = jwtSign(payload, this.REFRESH_TOKEN_KEY, REFRESH_TOKEN_EXPIRE);
+
+    const userWithoutPassword = excludeObjectKeys(user, ['passwordHashed']);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: userWithoutPassword,
+      message: MessagesConstant.USER_LOGGED_IN,
+    };
   }
 
-  async signup({ email, password }) {
-    // TODO: Check if user already exist in Database using email. If yes, throw new BadRequestException
-    
-    // TODO: Hash the password
+  async signup({ email, password, role }: { email: string; password: string; role: Role }) {
+    const existingUser = await this.userRepository.findOneByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException(ErrorsConstant.ERROR_USER_ALREADY_EXISTS);
+    }
 
-    // TODO: Create new user
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // TODO: Construct payload for JWT. Check the Payload type in jwt.strategy.ts
+    const newUser = await this.userRepository.createNewUser({
+      email,
+      passwordHashed: hashedPassword,
+      role,
+    });
 
-    // TODO: Use the jwtSign function in jwt.strategy.ts to generate access token.
-    // Remember to provide the correct secret key and the correct expire time.
-    // You can find the expire time of each token using the constant in jwt.constant.ts in common/constants
+    const payload = { user_id: newUser.userId, email: newUser.email, role: newUser.role };
 
-    // TODO: Use the jwtSign function in jwt.strategy.ts to generate refresh token
-    // Remember to provide the correct secret key and the correct expire time.
-    // You can find the expire time of each token using the constant in jwt.constant.ts in common/constants
-    
-    // TODO: Return access token, refresh token and user information that exclude the password
-    // You can use the excludeObjectKeys.ts file to exclude the password
-    // Checkout how to use it in the findOne service of Users Module
+    const accessToken = jwtSign(payload, this.ACCESS_TOKEN_KEY, ACCESS_TOKEN_EXPIRE);
+    const refreshToken = jwtSign(payload, this.REFRESH_TOKEN_KEY, REFRESH_TOKEN_EXPIRE);
+
+    const userWithoutPassword = excludeObjectKeys(newUser, ['passwordHashed']);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: userWithoutPassword,
+      message: MessagesConstant.USER_REGISTERED_SUCCESS,
+    };
   }
 
   async logout(userId: number) {
-    // TODO: Update user is_online, last_active_at and last_login field
-    // TODO: Return true
+    await this.userRepository.updateUser(userId, {
+      isOnline: false,
+      lastActiveAt: new Date(),
+      lastLogin: new Date(),
+    });
+
+    return { message: MessagesConstant.USER_LOGOUT_SUCCESS };
   }
 }

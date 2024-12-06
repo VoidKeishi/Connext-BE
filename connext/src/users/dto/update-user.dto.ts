@@ -21,4 +21,10 @@ export class UpdateUserDto {
 
   @IsBoolean()
   isOnline: boolean;
+
+  @IsDate()
+  lastActiveAt: Date;
+
+  @IsDate()
+  lastLogin: Date;
 }
