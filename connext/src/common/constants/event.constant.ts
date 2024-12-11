@@ -6,3 +6,9 @@ export const GROUP_CHAT_EVENT = {
   CREATE_NEW_GROUP_CHAT: 'create.new.group.chat',
   UPDATE_GROUP_CHAT_NAME: 'update.group.chat.name',
 };
+
+export const GROUP_MEMBER_EVENT = {
+  ADD_NEW_MEMBERS: 'add.new.members',
+  REMOVE_MEMBER: 'remove.member',
+  LEAVE_GROUP: 'leave.group',
+};

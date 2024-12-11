@@ -16,6 +16,27 @@ export class GroupMemberRepository {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  async findGroupMemberByGroupAndUser(
+    groupChat: GroupChat,
+    user: User,
+  ) : Promise<GroupMember | null> {
+    const foundGroupMember = await this.groupMemberRepository.findOne({
+      where: { user_id: user, group_id: groupChat },
+    })
+    return foundGroupMember;
+  }
+
+  async findGroupMemberById(groupMemberId): Promise<GroupMember | null> {
+    const foundGroupMember = await this.groupMemberRepository.findOne({
+      where: { group_member_id: groupMemberId },
+      relations: {
+        group_id: true,
+        user_id: true,
+      },
+    });
+    return foundGroupMember;
+  }
+
   async createNewGroupMember(
     groupChat: GroupChat,
     groupMember: User,
@@ -45,5 +66,34 @@ export class GroupMemberRepository {
     await this.userRepository.save(foundUser);
 
     return newGroupMemberCreated;
+  }
+
+  async deleteGroupMember(groupMember: GroupMember, groupChat: GroupChat) {
+    const deletedResult = await this.groupMemberRepository
+      .createQueryBuilder()
+      .delete()
+      .from(GroupMember)
+      .where('group_member_id = :groupMemberId', {
+        groupMemberId: groupMember.group_member_id,
+      })
+      .execute();
+
+    const foundGroupChat = await this.groupChatRepository.findOne({
+      where: { group_id: groupChat.group_id },
+    });
+    foundGroupChat.groupMembers = foundGroupChat.groupMembers.filter(
+      (member) => member.group_member_id !== groupMember.group_member_id,
+    );
+    await this.groupChatRepository.save(foundGroupChat);
+
+    const foundUser = await this.userRepository.findOne({
+      where: { userId: groupMember.user_id.userId },
+    });
+    foundUser.groupMembers = foundUser.groupMembers.filter(
+      (member) => member.group_member_id !== groupMember.group_member_id,
+    );;
+    await this.userRepository.save(foundUser);
+
+    return deletedResult;
   }
 }
