@@ -9,13 +9,20 @@ import { UsersModule } from 'src/users/users.module';
 import { User } from 'src/users/entities/user.entity';
 import { GroupChatRepository } from './repositories/group-chat.repository';
 import { GroupMemberRepository } from './repositories/group-member.repository';
+import { GroupMemberController } from './controllers/group-member.controller';
+import { GroupMemberService } from './services/group-member.service';
 
 @Module({
   imports: [
     UsersModule,
     TypeOrmModule.forFeature([GroupChat, GroupMember, GroupMessage, User]),
   ],
-  controllers: [GroupChatController],
-  providers: [GroupChatService, GroupChatRepository, GroupMemberRepository],
+  controllers: [GroupChatController, GroupMemberController],
+  providers: [
+    GroupChatService,
+    GroupMemberService,
+    GroupChatRepository,
+    GroupMemberRepository,
+  ],
 })
 export class GroupChatModule {}

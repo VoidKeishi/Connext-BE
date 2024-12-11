@@ -10,13 +10,17 @@ import { Server } from 'socket.io';
 import { GatewaySessions } from './gateways.session';
 import { AuthenticatedSocket } from './interfaces/AuthenticatedSocket';
 import {
+  AddNewMemberEventPayload,
   CreateGroupChatEventPayload,
+  LeaveGroupEventPayload,
+  RemoveMemberEventPayload,
   SendMessageEventPayload,
   UpdateGroupChatNameEventPayload,
 } from 'src/common/types';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   GROUP_CHAT_EVENT,
+  GROUP_MEMBER_EVENT,
   MESSAGE_EVENT,
 } from 'src/common/constants/event.constant';
 
@@ -82,5 +86,32 @@ export class GatewaysGateway
   handleUpdateGroupChatName(payload: UpdateGroupChatNameEventPayload) {
     // The same approach as handleCreateNewGroupChat.
     // Except this time we will emit and event called 'onGroupChatUpdateName'.
+  }
+
+  @OnEvent(GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS)
+  handleAddNewMembers(payload: AddNewMemberEventPayload) {
+    // TODO 1: Take the group id
+    // TODO 2: Emit an event called 'onGroupAddMembers along with the payload
+    // Make sure that emit to a room name 'group-${group id}'
+  }
+
+  @OnEvent(GROUP_MEMBER_EVENT.REMOVE_MEMBER)
+  handleRemoveMember(payload: RemoveMemberEventPayload) {
+    // TODO 1: Take the group id
+    // TODO 2: Find the socket of member that is removed
+    // If found, make that user leave the room
+    // If not then don't do anything
+    // TODO 3: Emit an event called 'onGroupRemoveMember' along with the payload
+    // Make sure that emit to a room name 'group-${group id}'
+  }
+
+  @OnEvent(GROUP_MEMBER_EVENT.LEAVE_GROUP)
+  handleLeaveGroup(payload: LeaveGroupEventPayload) {
+    // TODO 1: Take the group id
+    // TODO 2: Find the socket of member that leave
+    // If found, make that user leave the room
+    // If not then don't do anything
+    // TODO 3: Emit an event called 'onGroupLeave' along with the payload
+    // Make sure that emit to a room name 'group-${group id}'
   }
 }
