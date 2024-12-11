@@ -5,13 +5,17 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { GroupChat } from './group-chat.entity';
 
 @Entity('GroupMessage')
 export class GroupMessage {
-  @PrimaryGeneratedColumn()
-  group_id: number;
+  @PrimaryColumn()
+  @ManyToOne(() => GroupChat, (groupChat) => groupChat.groupMessages)
+  @JoinColumn({ name: 'group_id' })
+  group_id: GroupChat;
 
   @PrimaryGeneratedColumn()
   message_id: number;

@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { GroupMember } from './group-member.entity';
+import { GroupMessage } from './group-message.entity';
 
 @Entity('GroupChat')
 export class GroupChat {
@@ -33,4 +34,7 @@ export class GroupChat {
 
   @OneToMany(() => GroupMember, (groupChat) => groupChat.group_id)
   groupMembers: GroupMember[];
+
+  @OneToMany(() => GroupMessage, (groupMessage) => groupMessage.group_id)
+  groupMessages: GroupMessage[];
 }
