@@ -12,3 +12,7 @@ export const GROUP_MEMBER_EVENT = {
   REMOVE_MEMBER: 'remove.member',
   LEAVE_GROUP: 'leave.group',
 };
+
+export const GROUP_MESSAGE_EVENT = {
+  SEND_GROUP_MESSAGE: 'send.group.message',
+};

@@ -14,6 +14,7 @@ import {
   CreateGroupChatEventPayload,
   LeaveGroupEventPayload,
   RemoveMemberEventPayload,
+  SendGroupMessageEventPayload,
   SendMessageEventPayload,
   UpdateGroupChatNameEventPayload,
 } from 'src/common/types';
@@ -21,6 +22,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import {
   GROUP_CHAT_EVENT,
   GROUP_MEMBER_EVENT,
+  GROUP_MESSAGE_EVENT,
   MESSAGE_EVENT,
 } from 'src/common/constants/event.constant';
 
@@ -113,5 +115,13 @@ export class GatewaysGateway
     // If not then don't do anything
     // TODO 3: Emit an event called 'onGroupLeave' along with the payload
     // Make sure that emit to a room name 'group-${group id}'
+  }
+
+  @OnEvent(GROUP_MESSAGE_EVENT.SEND_GROUP_MESSAGE)
+  handleSendGroupMessage(payload: SendGroupMessageEventPayload) {
+    // TODO 1: Take the group id
+    // TODO 2: Make the room name using group id: `group-${group id}`
+    // TODO 3: Emit an event called 'onSendGroupMessage' along with the payload
+    // to the room
   }
 }
