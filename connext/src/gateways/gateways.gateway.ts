@@ -9,9 +9,16 @@ import {
 import { Server } from 'socket.io';
 import { GatewaySessions } from './gateways.session';
 import { AuthenticatedSocket } from './interfaces/AuthenticatedSocket';
-import { SendMessageEventPayload } from 'src/common/types';
+import {
+  CreateGroupChatEventPayload,
+  SendMessageEventPayload,
+  UpdateGroupChatNameEventPayload,
+} from 'src/common/types';
 import { OnEvent } from '@nestjs/event-emitter';
-import { MESSAGE_EVENT } from 'src/common/constants/event.constant';
+import {
+  GROUP_CHAT_EVENT,
+  MESSAGE_EVENT,
+} from 'src/common/constants/event.constant';
 
 @WebSocketGateway({
   cors: {
@@ -61,5 +68,19 @@ export class GatewaysGateway
 
     if (senderSocket) senderSocket.emit('onMessage', payload);
     if (recipientSocket) recipientSocket.emit('onMessage', payload);
+  }
+
+  @OnEvent(GROUP_CHAT_EVENT.CREATE_NEW_GROUP_CHAT)
+  handleCreateNewGroupChat(payload: CreateGroupChatEventPayload) {
+    // TODO 1: Take the all id of user
+    // TODO 2: Get gatewaySessions, make a loop with it
+    // For each clientId that match the id of user in payload, emit an event called 'onGroupChatCreate'
+    // along with the payload: CreateGroupChatEventPayload
+  }
+
+  @OnEvent(GROUP_CHAT_EVENT.UPDATE_GROUP_CHAT_NAME)
+  handleUpdateGroupChatName(payload: UpdateGroupChatNameEventPayload) {
+    // The same approach as handleCreateNewGroupChat.
+    // Except this time we will emit and event called 'onGroupChatUpdateName'.
   }
 }

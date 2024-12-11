@@ -15,13 +15,13 @@ export class GroupChat {
   @PrimaryGeneratedColumn()
   group_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   group_name: string;
 
-  @Column()
+  @Column({ nullable: true })
   last_message: string;
 
-  @Column('date')
+  @Column('date', { nullable: true })
   last_message_sent_at: Date;
 
   @CreateDateColumn()

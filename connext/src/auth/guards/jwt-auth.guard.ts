@@ -10,11 +10,9 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  private ACCESS_TOKEN_KEY: string
-  constructor(
-    private readonly configService: ConfigService
-  ) {
-    this.ACCESS_TOKEN_KEY = this.configService.get<string>('AT_SECRET_KEY')
+  private ACCESS_TOKEN_KEY: string;
+  constructor(private readonly configService: ConfigService) {
+    this.ACCESS_TOKEN_KEY = this.configService.get<string>('AT_SECRET_KEY');
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -24,9 +22,9 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      const payload = verifyToken(token, this.ACCESS_TOKEN_KEY)
+      const payload = verifyToken(token, this.ACCESS_TOKEN_KEY);
       request['user'] = payload;
-    } catch(error) {
+    } catch (error) {
       throw new UnauthorizedException(error);
     }
     return true;

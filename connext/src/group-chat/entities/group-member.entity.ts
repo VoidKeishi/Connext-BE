@@ -16,11 +16,11 @@ export class GroupMember {
 
   @ManyToOne(() => GroupChat, (groupChat) => groupChat.groupMembers)
   @JoinColumn({ name: 'group_id' })
-  group_id: number;
+  group_id: GroupChat;
 
   @ManyToOne(() => User, (user) => user.groupMembers)
   @JoinColumn({ name: 'user_id' })
-  user_id: number;
+  user_id: User;
 
   @Column()
   role: string;
