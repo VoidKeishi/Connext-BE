@@ -1,13 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import * as bcrypt from 'bcrypt';
 import { jwtSign } from './jwt.strategy';
 import { excludeObjectKeys } from 'src/common/utils/excludeObjectKeys';
-import { ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE } from 'src/common/constants/jwt.constant';
+import {
+  ACCESS_TOKEN_EXPIRE,
+  REFRESH_TOKEN_EXPIRE,
+} from 'src/common/constants/jwt.constant';
 import { MessagesConstant } from 'src/common/constants/messages.constant';
 import { ErrorsConstant } from 'src/common/constants/errors.constant';
-import { Role } from './role-enum';
+import { Role } from '../common/enum/role-enum';
+import { ISignIn } from './interfaces/sign-in.interface';
+import { ISignUp } from './interfaces/sign-up.interface';
 
 @Injectable()
 export class AuthService {
@@ -22,24 +31,40 @@ export class AuthService {
     this.REFRESH_TOKEN_KEY = this.configService.get<string>('RT_SECRET_KEY');
   }
 
-  async signin({ userName, email, password }: { userName?: string; email?: string; password: string }) {
-    const user = email
-      ? await this.userRepository.findOneByEmail(email)
-      : await this.userRepository.findOneByUserName(userName);
+  async signin(signInData: ISignIn) {
+    const user = signInData.email
+      ? await this.userRepository.findOneByEmail(signInData.email)
+      : await this.userRepository.findOneByUserName(signInData.username);
 
     if (!user) {
       throw new NotFoundException(ErrorsConstant.ERROR_USER_NOT_FOUND);
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHashed);
+    const isPasswordValid = await bcrypt.compare(
+      signInData.password,
+      user.passwordHashed,
+    );
     if (!isPasswordValid) {
       throw new BadRequestException(ErrorsConstant.ERROR_INVALID_CREDENTIALS);
     }
 
-    const payload = { user_id: user.userId, email: user.email, role: user.role };
+    const payload = {
+      userId: user.userId,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
 
-    const accessToken = jwtSign(payload, this.ACCESS_TOKEN_KEY, ACCESS_TOKEN_EXPIRE);
-    const refreshToken = jwtSign(payload, this.REFRESH_TOKEN_KEY, REFRESH_TOKEN_EXPIRE);
+    const accessToken = jwtSign(
+      payload,
+      this.ACCESS_TOKEN_KEY,
+      ACCESS_TOKEN_EXPIRE,
+    );
+    const refreshToken = jwtSign(
+      payload,
+      this.REFRESH_TOKEN_KEY,
+      REFRESH_TOKEN_EXPIRE,
+    );
 
     const userWithoutPassword = excludeObjectKeys(user, ['passwordHashed']);
 
@@ -47,28 +72,44 @@ export class AuthService {
       accessToken,
       refreshToken,
       user: userWithoutPassword,
-      message: MessagesConstant.USER_LOGGED_IN,
     };
   }
 
-  async signup({ email, password, role }: { email: string; password: string; role: Role }) {
-    const existingUser = await this.userRepository.findOneByEmail(email);
+  async signup(signUpData: ISignUp) {
+    const existingUser = await this.userRepository.findOneByEmail(
+      signUpData.email,
+    );
     if (existingUser) {
       throw new BadRequestException(ErrorsConstant.ERROR_USER_ALREADY_EXISTS);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(signUpData.password, 10);
 
-    const newUser = await this.userRepository.createNewUser({
-      email,
+    const newUserData = {
+      email: signUpData.email,
+      username: signUpData.username,
       passwordHashed: hashedPassword,
-      role,
-    });
+      role: Role.User,
+    };
+    const newUser = await this.userRepository.createNewUser(newUserData);
 
-    const payload = { user_id: newUser.userId, email: newUser.email, role: newUser.role };
+    const payload = {
+      userId: newUser.userId,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+    };
 
-    const accessToken = jwtSign(payload, this.ACCESS_TOKEN_KEY, ACCESS_TOKEN_EXPIRE);
-    const refreshToken = jwtSign(payload, this.REFRESH_TOKEN_KEY, REFRESH_TOKEN_EXPIRE);
+    const accessToken = jwtSign(
+      payload,
+      this.ACCESS_TOKEN_KEY,
+      ACCESS_TOKEN_EXPIRE,
+    );
+    const refreshToken = jwtSign(
+      payload,
+      this.REFRESH_TOKEN_KEY,
+      REFRESH_TOKEN_EXPIRE,
+    );
 
     const userWithoutPassword = excludeObjectKeys(newUser, ['passwordHashed']);
 
@@ -76,7 +117,6 @@ export class AuthService {
       accessToken,
       refreshToken,
       user: userWithoutPassword,
-      message: MessagesConstant.USER_REGISTERED_SUCCESS,
     };
   }
 

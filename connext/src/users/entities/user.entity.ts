@@ -1,3 +1,4 @@
+import { Role } from 'src/common/enum/role-enum';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { Friendship } from 'src/friends/entities/friendship.entity';
 import { GroupChat } from 'src/group-chat/entities/group-chat.entity';
@@ -15,37 +16,40 @@ import {
 @Entity('User')
 export class User {
   @PrimaryGeneratedColumn({ name: 'user_id' })
-  public userId: number;
+  userId: number;
 
   @Column({ name: 'username', length: 50, unique: true })
-  public userName: string;
+  username: string;
 
   @Column({ name: 'password_hash', nullable: false })
-  public passwordHashed: string;
+  passwordHashed: string;
 
   @Column({ name: 'email', length: 100, unique: true })
-  public email: string;
+  email: string;
 
   @Column({ name: 'nickname', length: 50, nullable: true })
-  public nickName?: string;
+  nickName?: string;
 
   @Column({ name: 'avatar_url', nullable: true })
-  public avatarUrl?: string;
+  avatarUrl?: string;
 
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
-  public dateOfBirth?: Date;
+  dateOfBirth?: Date;
 
   @CreateDateColumn({ name: 'created_at' })
-  public createdAt: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ name: 'last_login', nullable: true })
-  public lastLogin?: Date;
+  lastLogin?: Date;
 
   @Column({ default: false, name: 'is_online' })
-  public isOnline: boolean;
+  isOnline: boolean;
 
   @Column({ name: 'last_active_at', nullable: true })
-  public lastActiveAt?: Date;
+  lastActiveAt?: Date;
+
+  @Column({ name: 'role', enum: Role, default: Role.User })
+  role: Role;
 
   @OneToMany(() => Conversation, (conversation) => conversation.sender_id)
   senders: Conversation[];

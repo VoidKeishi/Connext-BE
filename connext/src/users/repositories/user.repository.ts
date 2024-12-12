@@ -9,43 +9,45 @@ import { InjectRepository } from '@nestjs/typeorm';
 export class UserRepository {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User> 
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async findAllUser(): Promise<User[]> {
-    return await this.userRepository.find()
+    return await this.userRepository.find();
   }
 
   async findOneById(userId: number): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { userId: userId } })
+    return await this.userRepository.findOne({ where: { userId: userId } });
   }
 
-  async findOneByUserName(userName: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { userName } });
+  async findOneByUserName(username: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { username } });
   }
-  
+
   async findOneByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({ where: { email } });
   }
 
   async createNewUser(createUserData: CreateUserDto): Promise<User> {
-    const newUser = this.userRepository.create(createUserData)
-    return await this.userRepository.save(newUser)
+    const newUser = this.userRepository.create(createUserData);
+    return await this.userRepository.save(newUser);
   }
 
   async updateUser(userId: number, updateUserData: UpdateUserDto) {
-    return await this.userRepository.createQueryBuilder()
-                .update(User)
-                .set(updateUserData)
-                .where("user_id = :userId", { userId })
-                .execute()
+    return await this.userRepository
+      .createQueryBuilder()
+      .update(User)
+      .set(updateUserData)
+      .where('user_id = :userId', { userId })
+      .execute();
   }
 
   async deleteUser(userId: number) {
-    return await this.userRepository.createQueryBuilder()
-                .delete()
-                .from(User)
-                .where("user_id = :userId", { userId })
-                .execute()
+    return await this.userRepository
+      .createQueryBuilder()
+      .delete()
+      .from(User)
+      .where('user_id = :userId', { userId })
+      .execute();
   }
 }

@@ -1,27 +1,18 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Res,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
-import { AuthDto } from './dto/auth.dto';
-import { Roles } from './roles-decorator';
-import { Role } from './role-enum';
+import { SignInDto } from './dto/sign-in.dto';
 import { AuthGuard } from './guards/jwt-auth.guard';
+import { SignUpDto } from './dto/sign-up.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('sign-in')
-  async signin(@Body() signinData: AuthDto, @Res() response: Response) {
+  async signin(@Body() signInData: SignInDto, @Res() response: Response) {
     const { accessToken, refreshToken, user } =
-      await this.authService.signin(signinData);
+      await this.authService.signin(signInData);
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: false,
@@ -38,9 +29,9 @@ export class AuthController {
   }
 
   @Post('sign-up')
-  async signup(@Body() signupData: AuthDto, @Res() response: Response) {
+  async signup(@Body() signUpData: SignUpDto, @Res() response: Response) {
     const { accessToken, refreshToken, user } =
-      await this.authService.signup(signupData);
+      await this.authService.signup(signUpData);
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: false,
@@ -59,7 +50,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post('logout')
   async logout(@Req() request: Request, @Res() response: Response) {
-    await this.authService.logout(request['user'].user_id);
+    await this.authService.logout(request['user'].userId);
 
     response.clearCookie('accessToken');
     response.clearCookie('refreshToken');
