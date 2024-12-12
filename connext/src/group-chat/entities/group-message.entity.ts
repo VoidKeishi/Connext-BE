@@ -12,7 +12,7 @@ import { GroupChat } from './group-chat.entity';
 
 @Entity('GroupMessage')
 export class GroupMessage {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'int64' })
   @ManyToOne(() => GroupChat, (groupChat) => groupChat.groupMessages)
   @JoinColumn({ name: 'group_id' })
   group_id: GroupChat;
