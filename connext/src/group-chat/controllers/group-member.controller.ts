@@ -6,6 +6,8 @@ import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { RemoveMemberDto } from '../dto/remove-member.dto';
 import { LeaveGroupDto } from '../dto/leave-group.dto';
+import { AddNewMemberEventPayload, RemoveMemberEventPayload, LeaveGroupEventPayload } from 'src/common/types';
+import { GROUP_MEMBER_EVENT } from 'src/common/constants/event.constant';
 
 @Controller('group-members')
 @UseGuards(AuthGuard)
@@ -20,19 +22,40 @@ export class GroupMemberController {
     @Req() request: Request,
     @Body() addNewMembersData: AddNewMemberDto,
   ) {
-    // TODO 1: Create a new data that has the same type as IAddNewMembers
-    // TODO 2: Call groupMemberService.addNewMembers(). Save the returned data.
-    // TODO 3: Emit an event called GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS
+    const { groupChat, members } = addNewMembersData;
+  
+    const addNewMembersPayload = {
+      groupChat,
+      issuer,
+      members,
+    };
+  
+    const newMembersData: AddNewMemberEventPayload = await this.groupMemberService.addNewMembers(addNewMembersPayload);
+  
+    this.eventEmitter.emit(GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS, newMembersData);
+  
+    return newMembersData;
   }
+  
 
   @Post('/remove-member')
   async removeGroupMember(
     @Req() request: Request,
     @Body() removeMemberData: RemoveMemberDto,
   ) {
-    // TODO 1: Create a new data that has the same type as IRemoveMember
-    // TODO 2: Call groupMemberService.removeGroupMember(). Save the returned data.
-    // TODO 3: Emit an event called GROUP_MEMBER_EVENT.REMOVE_MEMBER
+    const { groupChatId, groupMemberId } = removeMemberData;
+    const issuer = request.user.id;
+    const removeMemberPayload = {
+      groupChatId,
+      issuer,
+      groupMemberId,
+    };
+
+    const removedMemberData: RemoveMemberEventPayload = await this.groupMemberService.removeGroupMember(removeMemberPayload);
+
+    this.eventEmitter.emit(GROUP_MEMBER_EVENT.REMOVE_MEMBER, removedMemberData);
+
+    return removedMemberData;
   }
 
   @Post('/leave')
@@ -40,8 +63,19 @@ export class GroupMemberController {
     @Req() request: Request,
     @Body() leaveGroupData: LeaveGroupDto,
   ) {
-    // TODO 1: Create a new data that has the same type as ILeaveGroup
-    // TODO 2: Call groupMemberService.leaveGroupChat(). Save the returned data.
-    // TODO 3: Emit an event called GROUP_MEMBER_EVENT.LEAVE_GROUP
+
+    const { groupChatId } = leaveGroupData;
+    const userId = request.user.id; 
+
+    const leaveGroupPayload = {
+      groupChatId,
+      userId,
+    };
+
+    const leaveGroupDataResponse: LeaveGroupEventPayload = await this.groupMemberService.leaveGroupChat(leaveGroupPayload);
+    
+    this.eventEmitter.emit(GROUP_MEMBER_EVENT.LEAVE_GROUP, leaveGroupDataResponse);
+
+    return leaveGroupDataResponse;
   }
 }

@@ -6,5 +6,5 @@ export class AddNewMemberDto {
 
   @IsArray()
   @IsNumber({}, { each: true })
-  newMembers: number[];
+  members: number[];
 }
