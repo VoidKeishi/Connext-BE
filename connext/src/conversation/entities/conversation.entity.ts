@@ -16,16 +16,16 @@ export class Conversation {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'sender_id' })
-  sender_id: number;
+  sender_id: User;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'recipient_id' })
-  recipient_id: number;
+  recipient_id: User;
 
-  @Column('text')
+  @Column('text', { default: 'Lets say hi to each other!' })
   last_message: string;
 
-  @Column('date')
+  @Column('date', { nullable: true })
   last_message_sent_at: Date;
 
   @OneToMany(() => Message, (message) => message.conversation_id)

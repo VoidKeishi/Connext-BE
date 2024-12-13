@@ -3,7 +3,8 @@ import { Message } from '../entities/messages.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
-import { NewMessageDto } from '../dto/new-message.dto';
+import { INewMessage } from '../interfaces/new-message.interface';
+import { IGetMessageParams } from '../interfaces/get-message.interface';
 
 @Injectable()
 export class MessageRepository {
@@ -14,11 +15,30 @@ export class MessageRepository {
     private readonly conversationRepository: Repository<Conversation>,
   ) {}
 
-  async createNewMessage(data: NewMessageDto, conversation: Conversation) {
+  async countMessagesByConversation(conversationId: number): Promise<number> {
+    return await this.messageRepository
+      .createQueryBuilder('message')
+      .where('message.conversation_id = :conversationId', { conversationId })
+      .getCount();
+  }
+
+  async getMessagesPaginated(params: IGetMessageParams): Promise<Message[]> {
+    return await this.messageRepository
+      .createQueryBuilder('message')
+      .leftJoinAndSelect('message.conversation_id', 'conversation')
+      .where('conversation.conversation_id = :conversationId', {
+        conversationId: params.conversationId,
+      })
+      .offset(params.offset)
+      .limit(params.limit)
+      .getMany();
+  }
+
+  async createNewMessage(data: INewMessage, conversation: Conversation) {
     const message = new Message();
     message.content = data.content;
-    message.media_url = data.media_url;
-    message.media_type = data.media_type;
+    message.media_url = data.mediaUrl;
+    message.media_type = data.mediaType;
     message.conversation_id = conversation;
     const newMessage = await this.messageRepository.save(message);
 

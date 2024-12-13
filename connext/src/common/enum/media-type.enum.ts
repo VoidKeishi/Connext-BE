@@ -1,5 +1,6 @@
 export enum MEDIA_TYPE {
-  'text',
-  'image',
-  'video',
+  TEXT = 'text',
+  IMAGE = 'image',
+  VIDEO = 'video',
+  FILE = 'file',
 }
