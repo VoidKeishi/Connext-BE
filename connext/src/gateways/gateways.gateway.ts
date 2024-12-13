@@ -9,9 +9,11 @@ import { Server } from 'socket.io';
 import { GatewaySessions } from './gateways.session';
 import { AuthenticatedSocket } from './interfaces/AuthenticatedSocket';
 import {
+  AcceptFriendRequest,
   AddNewMemberEventPayload,
   CreateGroupChatEventPayload,
   LeaveGroupEventPayload,
+  NewFriendRequest,
   RemoveMemberEventPayload,
   SendGroupMessageEventPayload,
   SendMessageEventPayload,
@@ -19,6 +21,7 @@ import {
 } from 'src/common/types';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
+  FRIEND_EVENT,
   GROUP_CHAT_EVENT,
   GROUP_MEMBER_EVENT,
   GROUP_MESSAGE_EVENT,
@@ -126,5 +129,20 @@ export class GatewaysGateway
     // TODO 2: Make the room name using group id: `group-${group id}`
     // TODO 3: Emit an event called 'onSendGroupMessage' along with the payload
     // to the room
+  }
+
+  @OnEvent(FRIEND_EVENT.NEW_FRIEND_REQUEST)
+  handleNewFriendRequest(payload: NewFriendRequest) {
+    // TODO 1: Take the sender and recipient ID
+    // TODO 2: Emit and event called 'onNewFriendRequest' along with the payload
+  }
+
+  @OnEvent(FRIEND_EVENT.ACCEPT_FRIEND_REQUEST)
+  handleAcceptFriendRequest(payload: AcceptFriendRequest) {
+    // TODO 1: Take the senderId by using the payload.senderConversation.sender_id.userId
+    // TODO 2: Take the recipientId by using the payload.senderConversation.recipient_id.userId
+    // TODO 3: Emit and event called 'onAcceptFriendRequest' along with the payload
+    // payload.senderConversation to senderId socket
+    // payload.recipientConversation to recipientId socket
   }
 }
