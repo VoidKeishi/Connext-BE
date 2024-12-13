@@ -16,3 +16,8 @@ export const GROUP_MEMBER_EVENT = {
 export const GROUP_MESSAGE_EVENT = {
   SEND_GROUP_MESSAGE: 'send.group.message',
 };
+
+export const FRIEND_EVENT = {
+  NEW_FRIEND_REQUEST: 'new.friend.request',
+  ACCEPT_FRIEND_REQUEST: 'accept.friend.request',
+};
