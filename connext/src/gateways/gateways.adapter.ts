@@ -15,10 +15,10 @@ export class GatewaysAdapter extends IoAdapter {
         return next(new Error('Not Authenticated. No token provided'));
       }
 
-      const jwtToken = token.substring("Bearer ".length)
+      const jwtToken = token.substring('Bearer '.length);
 
       try {
-        const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET);
+        const decoded = jwt.verify(jwtToken, process.env.AT_SECRET_KEY);
         const userDB = plainToInstance(User, decoded);
         socket.user = userDB;
         next();

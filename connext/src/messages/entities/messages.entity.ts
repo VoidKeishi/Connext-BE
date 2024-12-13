@@ -1,3 +1,4 @@
+import { MEDIA_TYPE } from 'src/common/enum/media-type.enum';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import {
   Column,
@@ -23,8 +24,8 @@ export class Message {
   @Column({ nullable: true })
   media_url: string | null;
 
-  @Column()
-  media_type: string;
+  @Column({ enum: MEDIA_TYPE })
+  media_type: MEDIA_TYPE;
 
   @CreateDateColumn()
   timestamp: Date;

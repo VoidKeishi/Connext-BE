@@ -11,9 +11,14 @@ export class ConversationRepository {
   ) {}
 
   async findConversationById(id: number): Promise<Conversation | null> {
-    const foundConversation = await this.conversationRepostitory.findOneBy({
-      conversation_id: id,
-    });
+    const foundConversation = await this.conversationRepostitory
+      .createQueryBuilder('conversation')
+      .where('conversation.conversation_id = :id', { id })
+      .leftJoinAndSelect('conversation.sender_id', 'sender')
+      .leftJoinAndSelect('conversation.recipient_id', 'recipient')
+      .select(['conversation', 'sender.userId', 'recipient.userId'])
+      .getOne();
+
     return foundConversation;
   }
 }

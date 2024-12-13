@@ -1,7 +1,6 @@
 import {
   WebSocketGateway,
   SubscribeMessage,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
@@ -44,14 +43,14 @@ export class GatewaysGateway
 
   handleConnection(socket: AuthenticatedSocket, ...args: any[]) {
     console.log('Incoming Connection');
-    // this.gatewaySession.setSocket(socket.user.userId, socket)
-    // console.log(`Client ${socket.user.userId} connected!`)
+    this.gatewaySession.setSocket(socket.user.userId, socket);
+    console.log(`Client ${socket.user.userId} connected!`);
     console.log('Client connected!!!');
   }
 
   handleDisconnect(socket: AuthenticatedSocket) {
-    // this.gatewaySession.removeSocket(socket.user.userId)
-    // console.log(`Client ${socket.user.userId} disconnected!`)
+    this.gatewaySession.removeSocket(socket.user.userId);
+    console.log(`Client ${socket.user.userId} disconnected!`);
     console.log('Client disconnected!!!');
   }
 
@@ -67,10 +66,14 @@ export class GatewaysGateway
   @OnEvent(MESSAGE_EVENT.SEND_MESSAGE)
   handleSendMessageEvent(payload: SendMessageEventPayload) {
     const {
-      conversation: { sender_id, recipient_id },
+      message: {
+        conversation_id: { sender_id, recipient_id },
+      },
     } = payload;
-    const senderSocket = this.gatewaySession.getClientSocket(sender_id);
-    const recipientSocket = this.gatewaySession.getClientSocket(recipient_id);
+    const senderSocket = this.gatewaySession.getClientSocket(sender_id.userId);
+    const recipientSocket = this.gatewaySession.getClientSocket(
+      recipient_id.userId,
+    );
 
     if (senderSocket) senderSocket.emit('onMessage', payload);
     if (recipientSocket) recipientSocket.emit('onMessage', payload);
