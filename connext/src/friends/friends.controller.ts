@@ -56,13 +56,15 @@ export class FriendsController {
 
   @Get('/friend-requests')
   async getFriendRequest(@Req() request: Request) {
-    // TODO 1: Call friendshipRepository.getFriendRequests(request['user'].userId)
-    // TODO 2: Return the data
+    // Fetching the friend requests for the current user
+    const friendRequests = await this.friendshipRepository.getFriendRequests(request['user'].userId);
+    return friendRequests;
   }
 
   @Get('/friends')
-  async getFriends(@Req() reequest: Request) {
-    // TODO 1: Call friendshipRepository.getFriends(request['user'].userId)
-    // TODO 2: Return the data
+  async getFriends(@Req() request: Request) {
+    // Fetching the friends for the current user
+    const friends = await this.friendshipRepository.getFriends(request['user'].userId);
+    return friends;
   }
 }

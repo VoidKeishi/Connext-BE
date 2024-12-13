@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { FriendshipRepository } from './repositories/friendship.repository';
 import { INewFriendRequest } from './interfaces/new-friend-request.interface';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { IResponseFriendRequest } from './interfaces/response-friend-request.interface';
 import { ConversationRepository } from 'src/conversation/repositories/conversation.repository';
+import { FRIENDSHIP_STATUS } from 'src/common/enum/friendship-status.enum';
 
 @Injectable()
 export class FriendsService {
@@ -14,32 +15,64 @@ export class FriendsService {
   ) {}
 
   async createNewFriendRequest(newFriendRequest: INewFriendRequest) {
-    // TODO 1: Check if recipient exist. If not exist, throw NotFoundException
-    // TODO 2: Get request sender using userRepository.findOneById(newFriendRequest.senderId)
-    // TODO 3: Create new friend request using friendshipRepository.createNewFriendRequest()
-    // TODO 4: Return new friend request
+    const recipient = await this.userRepository.findOneById(newFriendRequest.recipientId);
+    if (!recipient) {
+      throw new NotFoundException('Recipient not found');
+    }
+
+    const sender = await this.userRepository.findOneById(newFriendRequest.senderId);
+    if (!sender) {
+      throw new NotFoundException('Sender not found');
+    }
+
+    const createdFriendRequest = await this.friendshipRepository.createNewFriendRequest(sender, recipient);
+
+    return createdFriendRequest;
   }
+
 
   async acceptFriendRequest(acceptFriendRequest: IResponseFriendRequest) {
-    // TODO 1: Check if this friend requet exist using friendshipRepository.getFriendRequestById
-    // If not exist, throw NotFoundException
-    // TODO 2: Check if the status of this friend request is FRIENDSHIP_STATUS.FRIEND.
-    // If it is, throw new BadRequestException
-    // TODO 3: Update friend request using friendshipRepository.updateFriendRequestStatus()
-    // Remember to pass the enum FRIENDSHIP_STATUS.FRIEND
-    // TODO 4: Create 2 new conversations using conversationRepository.createNewConversation
-    // The first conversation is the conversation of the person that make the friend request
-    // The second conversation is the conversation of the person that recieve and accept the friend request
-    // TODO 5: Return 2 new conversations.
+    const friendRequest = await this.friendshipRepository.getFriendRequestById(acceptFriendRequest.friendRequestId);
+  
+    if (!friendRequest) {
+      throw new NotFoundException('Friend request not found');
+    }
+  
+
+    if (friendRequest.status === FRIENDSHIP_STATUS.FRIEND) {
+      throw new BadRequestException('This friend request has already been accepted');
+    }
+  
+
+    await this.friendshipRepository.updateFriendRequestStatus(
+      acceptFriendRequest.friendRequestId,
+      FRIENDSHIP_STATUS.FRIEND 
+    );
+  
+
+    const sender = friendRequest.user_id;
+    const recipient = friendRequest.friend_user_id;
+    const conversation1 = await this.conversationRepository.createNewConversation(sender, recipient);
+    const conversation2 = await this.conversationRepository.createNewConversation(recipient, sender);
+  
+    return [conversation1, conversation2];
   }
+
 
   async rejectFriendRequest(rejectFriendRequest: IResponseFriendRequest) {
-    // TODO 1: Check if this friend requet exist using friendshipRepository.getFriendRequestById
-    // If not exist, throw NotFoundException
-    // TODO 2: Delete the friend request using friendshipRepository.deleteFriendRequest()
-    // TODO 3: Return true if delete success. Else throw new InternalServerException
-  }
+    const friendRequest = await this.friendshipRepository.getFriendRequestById(rejectFriendRequest.friendRequestId);
+  
+    if (!friendRequest) {
+      throw new NotFoundException('Not found');
+    }
+  
+    const deleteResult = await this.friendshipRepository.deleteFriendRequest(rejectFriendRequest.friendRequestId);
 
-  // 4. Get all friendships
-  // 5. Get all pending friend request
-}
+    if (deleteResult.affected > 0) {
+      return true;
+    } else {
+      throw new InternalServerErrorException('faied to delete');
+    }
+  }
+  
+}  
