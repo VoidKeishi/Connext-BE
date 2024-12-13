@@ -8,6 +8,8 @@ import {
   UpdateGroupChatNameEventPayload,
 } from 'src/common/types';
 import { IUpdateGroupChatName } from '../interfaces/update-group-chat-name.interface';
+import { NotFoundException } from '@nestjs/common';
+import { GroupMember } from '../entities/group-member.entity';
 
 @Injectable()
 export class GroupChatService {
@@ -20,23 +22,66 @@ export class GroupChatService {
   async createNewGroupChat(
     newGroupChatData: INewGroupChat,
   ): Promise<CreateGroupChatEventPayload> {
-    // TODO 1: Make a loop that will check if each newGroupChatData.members is existing in Database or not
-    // TODO 2: Get the user with id is the same as newGroupChatData.createdBy
-    // TODO 3: Create a new groupchat using the groupChatRepository.createNewGroupChat()
-    // And then create a new groupmember with that user (the user with id is the same as newGroupChatData.createdBy)
-    // Remember to make the role of this user is 'leader'
-    // TODO 4: Make a loop that will iterate through each newGroupChatData.members to find user
-    // Use that found user, combine with the groupchat that just created to make a new data for groupmember.
-    // Remember to make the role of these user are 'user'
-    // Return the data that is the same as CreateGroupChatEventPayload
-  }
+    const { createdBy, members } = newGroupChatData;
 
-  async updateGroupChatName(
+    const memberUsers = await Promise.all(
+      members.map(async (memberId) => {
+        const user = await this.userRepository.findOneById(memberId);
+        if (!user) {
+          throw new NotFoundException(`user not found`);
+        }
+        return user;
+      })
+    );
+
+    const creatorUser = await this.userRepository.findOneById(createdBy);
+
+    const newGroupChat = await this.groupChatRepository.createNewGroupChat(creatorUser);
+
+    const creatorMember = await this.groupMemberRepository.addMemberToGroup(
+      newGroupChat,
+      creatorUser,
+      'leader',
+    );
+
+    const groupMembers: GroupMember[] = [];
+    groupMembers.push(creatorMember);  
+    for (const memberUser of memberUsers) {
+      const newMember = await this.groupMemberRepository.addMemberToGroup(
+        newGroupChat,
+        memberUser,
+        'user',
+      );
+      groupMembers.push(newMember); 
+    }
+
+    return {
+      groupChat: newGroupChat,
+      members: groupMembers, 
+    };
+  }
+  
+
+  async updateGroupChatName( 
     updateGroupChatNameData: IUpdateGroupChatName,
   ): Promise<UpdateGroupChatNameEventPayload> {
-    // TODO 1: Check if the group chat is exist
-    // TODO 2: Update the group chat using groupChatRepository.updateGroupChatName()
-    // TODO 3: Get all id of members of this group
-    // Return the data that is the same as UpdateGroupChatNameEventPayload
+    const { groupId, groupName } = updateGroupChatNameData;
+  
+    const groupChat = await this.groupChatRepository.findGroupChatById(groupId);
+    if (!groupChat) {
+      throw new Error('Group chat does not exist');
+    }
+  
+    await this.groupChatRepository.updateGroupChatName(groupId, groupName);
+  
+    const updatedGroupChat = await this.groupChatRepository.findGroupChatById(groupId);
+  
+    const memberIds = updatedGroupChat.members.map(member => member.userId);
+  
+    return {
+      groupChat: updatedGroupChat,
+      members: memberIds,
+    };
   }
+  
 }
