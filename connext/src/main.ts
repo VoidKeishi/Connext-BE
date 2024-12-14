@@ -1,12 +1,22 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { GatewaysAdapter } from './gateways/gateways.adapter';
 import { AppModule } from './app.module';
+import { ALLOW_LIST } from './common/constants/allow-list.contant';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: function (origin, callback) {
+      if (ALLOW_LIST.includes(origin) || !origin) {
+        return callback(null, true);
+      }
+      return callback(new BadRequestException('CORS Error'));
+    },
+    credentials: true,
+  });
   const adapter = new GatewaysAdapter(app);
   app.useWebSocketAdapter(adapter);
   app.setGlobalPrefix('/api');
@@ -20,6 +30,6 @@ async function bootstrap() {
   );
   app.use(cookieParser());
   app.use(helmet());
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 8000);
 }
 bootstrap();
