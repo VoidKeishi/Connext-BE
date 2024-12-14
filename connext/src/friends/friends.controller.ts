@@ -26,7 +26,9 @@ export class FriendsController {
       senderId: request['user'].userId,
       recipientId: createFriendRequestData.recipientId,
     });
-    this.eventEmitter.emit(FRIEND_EVENT.NEW_FRIEND_REQUEST, newFriendRequest);
+    this.eventEmitter.emit(FRIEND_EVENT.NEW_FRIEND_REQUEST, {
+      newFriendRequest,
+    });
     return;
   }
 
@@ -37,10 +39,10 @@ export class FriendsController {
     const newConversations = await this.friendsService.acceptFriendRequest({
       friendRequestId: responseFriendRequestData.friendRequestId,
     });
-    this.eventEmitter.emit(
-      FRIEND_EVENT.ACCEPT_FRIEND_REQUEST,
-      newConversations,
-    );
+    this.eventEmitter.emit(FRIEND_EVENT.ACCEPT_FRIEND_REQUEST, {
+      senderConversation: newConversations[0],
+      recipientConversation: newConversations[1],
+    });
     return;
   }
 

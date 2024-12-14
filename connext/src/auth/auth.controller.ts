@@ -35,13 +35,13 @@ export class AuthController {
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: false,
-      maxAge: 15 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     response.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 120 * 24 * 60 * 60 * 1000,
     });
 
     return response.status(201).json({ user });

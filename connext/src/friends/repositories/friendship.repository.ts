@@ -16,10 +16,26 @@ export class FriendshipRepository {
     return await this.friendshipRepository
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'user')
+      .leftJoinAndSelect('friendship.friend_user_id', 'friend')
       .where('user.user_id = :userId', { userId: userId })
       .andWhere('friendship.status = :status', {
         status: FRIENDSHIP_STATUS.FRIEND,
       })
+      .select([
+        'friendship',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.nickName',
+        'user.avatarUrl',
+        'user.isOnline',
+        'friend.userId',
+        'friend.username',
+        'friend.email',
+        'friend.nickName',
+        'friend.avatarUrl',
+        'friend.isOnline',
+      ])
       .getMany();
   }
 
@@ -31,18 +47,49 @@ export class FriendshipRepository {
       .leftJoinAndSelect('friendship.user_id', 'user')
       .leftJoinAndSelect('friendship.friend_user_id', 'friend')
       .where('friendship.friendship_id = :id', { id: friendRequestId })
-      .execute();
+      .getOne();
   }
 
   async getFriendRequests(userId: number): Promise<Friendship[]> {
     return await this.friendshipRepository
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'user')
+      .leftJoinAndSelect('friendship.friend_user_id', 'friend')
       .where('user.user_id = :userId', { userId: userId })
       .andWhere('friendship.status = :status', {
         status: FRIENDSHIP_STATUS.PENDING,
       })
+      .select([
+        'friendship',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.nickName',
+        'user.avatarUrl',
+        'user.isOnline',
+        'friend.userId',
+        'friend.username',
+        'friend.email',
+        'friend.nickName',
+        'friend.avatarUrl',
+        'friend.isOnline',
+      ])
       .getMany();
+  }
+
+  async getUserFriendRequestBySenderAndRecipient(
+    sender: User,
+    recipient: User,
+  ): Promise<Friendship> {
+    return await this.friendshipRepository
+      .createQueryBuilder('friendship')
+      .leftJoinAndSelect('friendship.user_id', 'sender')
+      .leftJoinAndSelect('friendship.friend_user_id', 'recipient')
+      .where('sender.user_id = :senderId', { senderId: sender.userId })
+      .andWhere('recipient.user_id = :recipientId', {
+        recipientId: recipient.userId,
+      })
+      .getOne();
   }
 
   async createNewFriendRequest(
@@ -55,7 +102,8 @@ export class FriendshipRepository {
     newFriendRequest.status = FRIENDSHIP_STATUS.PENDING;
     const newFriendRequestData =
       await this.friendshipRepository.save(newFriendRequest);
-
+    newFriendRequestData.user_id.passwordHashed = '';
+    newFriendRequestData.friend_user_id.passwordHashed = '';
     return newFriendRequestData;
   }
 
