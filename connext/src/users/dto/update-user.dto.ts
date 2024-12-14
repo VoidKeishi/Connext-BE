@@ -1,10 +1,16 @@
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsBoolean, IsUrl, IsDate } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsUrl,
+  IsDate,
+} from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
   @IsOptional()
-  userName?: string;
+  username?: string;
 
   @IsString()
   @IsOptional()
