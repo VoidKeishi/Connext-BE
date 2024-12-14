@@ -137,10 +137,9 @@ export class GatewaysGateway
 
   @OnEvent(GROUP_MESSAGE_EVENT.SEND_GROUP_MESSAGE)
   handleSendGroupMessage(payload: SendGroupMessageEventPayload) {
-    // TODO 1: Take the group id
-    // TODO 2: Make the room name using group id: `group-${group id}`
-    // TODO 3: Emit an event called 'onSendGroupMessage' along with the payload
-    // to the room
+    const { groupMessage } = payload;
+    const roomName = `group-${groupMessage.group_id.group_id}`;
+    this.server.to(roomName).emit('onSendGroupMessage', payload);
   }
 
   @OnEvent(FRIEND_EVENT.NEW_FRIEND_REQUEST)

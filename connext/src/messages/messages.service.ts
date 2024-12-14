@@ -33,7 +33,6 @@ export class MessagesService {
       );
 
     const offset = Math.max(0, totalMessages - data.offset * data.limit);
-    console.log('🚀 ~ MessagesService ~ getMessages ~ offset:', offset)
 
     const messages = await this.messageRepository.getMessagesPaginated({
       ...data,
