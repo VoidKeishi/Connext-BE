@@ -28,6 +28,29 @@ export class UserRepository {
     return await this.userRepository.findOne({ where: { email } });
   }
 
+  async countUsersByEmailOrUsername(query: string): Promise<number> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email LIKE :email', { email: `%${query}%` })
+      .orWhere('user.username LIKE :username', { username: `${query}` })
+      .getCount();
+  }
+
+  async findManyUsersByEmailOrUsername(
+    query: string,
+    limit: number,
+    offset: number,
+  ): Promise<User[] | null> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email LIKE :email', { email: `%${query}%` })
+      .orWhere('user.username LIKE :username', { username: `${query}` })
+      .select(['user.userId', 'user.username', 'user.email', 'user.avatarUrl'])
+      .limit(limit)
+      .offset(offset - 1)
+      .getMany();
+  }
+
   async createNewUser(createUserData: CreateUserDto): Promise<User> {
     const newUser = this.userRepository.create(createUserData);
     return await this.userRepository.save(newUser);
