@@ -62,7 +62,7 @@ export class GroupChatService {
     const groupMembers: GroupMember[] = [];
     groupMembers.push(creatorMember);
     for (const memberUser of memberUsers) {
-      const newMember = await this.groupMemberRepository.addMemberToGroup(
+      const newMember = await this.groupMemberRepository.createNewGroupMember(
         newGroupChat,
         memberUser,
         GroupMemberRole.MEMBER,

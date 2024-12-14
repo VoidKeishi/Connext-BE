@@ -6,7 +6,11 @@ import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { RemoveMemberDto } from '../dto/remove-member.dto';
 import { LeaveGroupDto } from '../dto/leave-group.dto';
-import { AddNewMemberEventPayload, RemoveMemberEventPayload, LeaveGroupEventPayload } from 'src/common/types';
+import {
+  AddNewMemberEventPayload,
+  RemoveMemberEventPayload,
+  LeaveGroupEventPayload,
+} from 'src/common/types';
 import { GROUP_MEMBER_EVENT } from 'src/common/constants/event.constant';
 
 @Controller('group-members')
@@ -22,39 +26,30 @@ export class GroupMemberController {
     @Req() request: Request,
     @Body() addNewMembersData: AddNewMemberDto,
   ) {
-    const { groupChat, members } = addNewMembersData;
-  
     const addNewMembersPayload = {
-      groupChat,
-      issuer,
-      members,
+      groupChat: addNewMembersData.groupChat,
+      issuer: request['user'].userId,
+      members: addNewMembersData.members,
     };
-  
-    const newMembersData: AddNewMemberEventPayload = await this.groupMemberService.addNewMembers(addNewMembersPayload);
-  
+    const newMembersData: AddNewMemberEventPayload =
+      await this.groupMemberService.addNewMembers(addNewMembersPayload);
     this.eventEmitter.emit(GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS, newMembersData);
-  
     return newMembersData;
   }
-  
 
   @Post('/remove-member')
   async removeGroupMember(
     @Req() request: Request,
     @Body() removeMemberData: RemoveMemberDto,
   ) {
-    const { groupChatId, groupMemberId } = removeMemberData;
-    const issuer = request.user.id;
     const removeMemberPayload = {
-      groupChatId,
-      issuer,
-      groupMemberId,
+      groupChatId: removeMemberData.groupChatId,
+      issuer: request['user'].userId,
+      groupMemberId: removeMemberData.groupMemberId,
     };
-
-    const removedMemberData: RemoveMemberEventPayload = await this.groupMemberService.removeGroupMember(removeMemberPayload);
-
+    const removedMemberData: RemoveMemberEventPayload =
+      await this.groupMemberService.removeGroupMember(removeMemberPayload);
     this.eventEmitter.emit(GROUP_MEMBER_EVENT.REMOVE_MEMBER, removedMemberData);
-
     return removedMemberData;
   }
 
@@ -63,18 +58,18 @@ export class GroupMemberController {
     @Req() request: Request,
     @Body() leaveGroupData: LeaveGroupDto,
   ) {
-
-    const { groupChatId } = leaveGroupData;
-    const userId = request.user.id; 
-
     const leaveGroupPayload = {
-      groupChatId,
-      userId,
+      groupChatId: leaveGroupData.groupChatId,
+      userId: request['user'].userId,
     };
 
-    const leaveGroupDataResponse: LeaveGroupEventPayload = await this.groupMemberService.leaveGroupChat(leaveGroupPayload);
-    
-    this.eventEmitter.emit(GROUP_MEMBER_EVENT.LEAVE_GROUP, leaveGroupDataResponse);
+    const leaveGroupDataResponse: LeaveGroupEventPayload =
+      await this.groupMemberService.leaveGroupChat(leaveGroupPayload);
+
+    this.eventEmitter.emit(
+      GROUP_MEMBER_EVENT.LEAVE_GROUP,
+      leaveGroupDataResponse,
+    );
 
     return leaveGroupDataResponse;
   }

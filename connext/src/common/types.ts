@@ -4,7 +4,6 @@ import { GroupChat } from 'src/group-chat/entities/group-chat.entity';
 import { GroupMember } from 'src/group-chat/entities/group-member.entity';
 import { GroupMessage } from 'src/group-chat/entities/group-message.entity';
 import { Message } from 'src/messages/entities/messages.entity';
-import { User } from 'src/users/entities/user.entity';
 
 export type SendMessageEventPayload = {
   message: Message;
@@ -22,7 +21,7 @@ export type UpdateGroupChatNameEventPayload = {
 
 export type AddNewMemberEventPayload = {
   groupChat: GroupChat;
-  leader: User;
+  leader: GroupMember;
   newMembers: GroupMember[];
 };
 
@@ -33,7 +32,7 @@ export type RemoveMemberEventPayload = {
 
 export type LeaveGroupEventPayload = {
   groupChat: GroupChat;
-  leaveMember: User;
+  leaveMember: GroupMember;
 };
 
 export type SendGroupMessageEventPayload = {
