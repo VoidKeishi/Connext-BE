@@ -26,9 +26,12 @@ export class FriendshipRepository {
   async getFriendRequestById(
     friendRequestId: number,
   ): Promise<Friendship | null> {
-    return await this.friendshipRepository.findOne({
-      where: { friendship_id: friendRequestId },
-    });
+    return await this.friendshipRepository
+      .createQueryBuilder('friendship')
+      .leftJoinAndSelect('friendship.user_id', 'user')
+      .leftJoinAndSelect('friendship.friend_user_id', 'friend')
+      .where('friendship.friendship_id = :id', { id: friendRequestId })
+      .execute();
   }
 
   async getFriendRequests(userId: number): Promise<Friendship[]> {
