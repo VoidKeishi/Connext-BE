@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { GroupChat } from './group-chat.entity';
+import { MEDIA_TYPE } from 'src/common/enum/media-type.enum';
 
 @Entity('GroupMessage')
 export class GroupMessage {
@@ -30,8 +31,8 @@ export class GroupMessage {
   @Column({ nullable: true })
   media_url: string | null;
 
-  @Column()
-  media_type: string;
+  @Column({ enum: MEDIA_TYPE, default: MEDIA_TYPE.TEXT })
+  media_type: MEDIA_TYPE;
 
   @CreateDateColumn()
   timestamp: Date;

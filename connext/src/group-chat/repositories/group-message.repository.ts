@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { GroupChat } from '../entities/group-chat.entity';
 import { User } from 'src/users/entities/user.entity';
 import { INewGroupMessage } from '../interfaces/new-group-message.interface';
+import { IGetGroupMessageParams } from '../interfaces/get-group-message.interface';
 
 @Injectable()
 export class GroupMessageRepository {
@@ -16,6 +17,28 @@ export class GroupMessageRepository {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  async countGroupMessagesByConversation(
+    groupChat: GroupChat,
+  ): Promise<number> {
+    return await this.groupMessageRepository.findAndCount({
+      where: { group_id: groupChat },
+    })[1];
+  }
+
+  async getGroupMessagesPaginated(
+    params: IGetGroupMessageParams,
+  ): Promise<GroupMessage[]> {
+    return await this.groupMessageRepository
+      .createQueryBuilder('groupmessage')
+      .leftJoinAndSelect('groupmessage.group_id', 'groupchat')
+      .where('groupchat.group_id = :id', {
+        id: params.groupChatId,
+      })
+      .offset(params.offset)
+      .limit(params.limit)
+      .getMany();
+  }
 
   async createNewGroupMessage(
     groupChat: GroupChat,
