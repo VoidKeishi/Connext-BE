@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { GroupChatRepository } from '../repositories/group-chat.repository';
 import { GroupMemberRepository } from '../repositories/group-member.repository';
@@ -10,6 +10,8 @@ import {
 import { IUpdateGroupChatName } from '../interfaces/update-group-chat-name.interface';
 import { NotFoundException } from '@nestjs/common';
 import { GroupMember } from '../entities/group-member.entity';
+import { GroupChat } from '../entities/group-chat.entity';
+import { GroupMemberRole } from 'src/common/enum/group-member-role.enum';
 
 @Injectable()
 export class GroupChatService {
@@ -18,6 +20,13 @@ export class GroupChatService {
     private readonly groupChatRepository: GroupChatRepository,
     private readonly groupMemberRepository: GroupMemberRepository,
   ) {}
+
+  async getGroupChatDetail(groupChatId: number): Promise<GroupChat> {
+    const foundGroupChat =
+      await this.groupChatRepository.findGroupChatById(groupChatId);
+    if (!foundGroupChat) throw new NotFoundException('No group chat found!');
+    return foundGroupChat;
+  }
 
   async createNewGroupChat(
     newGroupChatData: INewGroupChat,
@@ -31,57 +40,67 @@ export class GroupChatService {
           throw new NotFoundException(`user not found`);
         }
         return user;
-      })
+      }),
     );
-
     const creatorUser = await this.userRepository.findOneById(createdBy);
 
-    const newGroupChat = await this.groupChatRepository.createNewGroupChat(creatorUser);
-
-    const creatorMember = await this.groupMemberRepository.addMemberToGroup(
+    const newGroupChat =
+      await this.groupChatRepository.createNewGroupChat(creatorUser);
+    const foundGroupMember =
+      await this.groupMemberRepository.findGroupMemberByGroupAndUser(
+        newGroupChat,
+        creatorUser,
+      );
+    if (foundGroupMember)
+      throw new BadRequestException('User already in group chat!');
+    const creatorMember = await this.groupMemberRepository.createNewGroupMember(
       newGroupChat,
       creatorUser,
-      'leader',
+      GroupMemberRole.LEADER,
     );
 
     const groupMembers: GroupMember[] = [];
-    groupMembers.push(creatorMember);  
+    groupMembers.push(creatorMember);
     for (const memberUser of memberUsers) {
       const newMember = await this.groupMemberRepository.addMemberToGroup(
         newGroupChat,
         memberUser,
-        'user',
+        GroupMemberRole.MEMBER,
       );
-      groupMembers.push(newMember); 
+      groupMembers.push(newMember);
     }
 
     return {
       groupChat: newGroupChat,
-      members: groupMembers, 
+      members: groupMembers,
     };
   }
-  
 
-  async updateGroupChatName( 
+  async updateGroupChatName(
     updateGroupChatNameData: IUpdateGroupChatName,
   ): Promise<UpdateGroupChatNameEventPayload> {
     const { groupId, groupName } = updateGroupChatNameData;
-  
+
     const groupChat = await this.groupChatRepository.findGroupChatById(groupId);
     if (!groupChat) {
-      throw new Error('Group chat does not exist');
+      throw new NotFoundException('Group chat does not exist');
     }
-  
-    await this.groupChatRepository.updateGroupChatName(groupId, groupName);
-  
-    const updatedGroupChat = await this.groupChatRepository.findGroupChatById(groupId);
-  
-    const memberIds = updatedGroupChat.members.map(member => member.userId);
-  
+
+    const updatedGroupChat = await this.groupChatRepository.updateGroupChatName(
+      groupId,
+      groupName,
+    );
+
+    const foundGroupMembers =
+      await this.groupMemberRepository.findGroupMemberByGroup(updatedGroupChat);
+    const foundGroupMemberIds = [];
+    for (let i = 0; i < foundGroupMembers.length; i++) {
+      foundGroupMemberIds.push(foundGroupMembers[i].user_id.userId);
+    }
+
     return {
       groupChat: updatedGroupChat,
-      members: memberIds,
+      members: foundGroupMemberIds,
     };
   }
-  
 }

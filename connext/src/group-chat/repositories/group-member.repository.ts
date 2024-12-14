@@ -4,6 +4,7 @@ import { GroupChat } from '../entities/group-chat.entity';
 import { Repository, EntityManager } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { GroupMember } from '../entities/group-member.entity';
+import { GroupMemberRole } from 'src/common/enum/group-member-role.enum';
 
 @Injectable()
 export class GroupMemberRepository {
@@ -19,14 +20,23 @@ export class GroupMemberRepository {
   async findGroupMemberByGroupAndUser(
     groupChat: GroupChat,
     user: User,
-  ) : Promise<GroupMember | null> {
+  ): Promise<GroupMember | null> {
     const foundGroupMember = await this.groupMemberRepository.findOne({
       where: { user_id: user, group_id: groupChat },
-    })
+    });
     return foundGroupMember;
   }
 
-  async findGroupMemberById(groupMemberId): Promise<GroupMember | null> {
+  async findGroupMemberByGroup(groupChat: GroupChat): Promise<GroupMember[]> {
+    const foundGroupMembers = await this.groupMemberRepository.find({
+      where: { group_id: groupChat },
+    });
+    return foundGroupMembers;
+  }
+
+  async findGroupMemberById(
+    groupMemberId: number,
+  ): Promise<GroupMember | null> {
     const foundGroupMember = await this.groupMemberRepository.findOne({
       where: { group_member_id: groupMemberId },
       relations: {
@@ -40,7 +50,7 @@ export class GroupMemberRepository {
   async createNewGroupMember(
     groupChat: GroupChat,
     groupMember: User,
-    role: 'user' | 'leader',
+    role: GroupMemberRole,
   ): Promise<GroupMember> {
     const newGroupMember = new GroupMember();
     newGroupMember.group_id = groupChat;
@@ -50,20 +60,14 @@ export class GroupMemberRepository {
     const newGroupMemberCreated =
       await this.groupMemberRepository.save(newGroupMember);
 
-    const foundGroupChat = await this.groupChatRepository.findOne({
-      where: { group_id: groupChat.group_id },
-    });
-    foundGroupChat.groupMembers = [
-      ...foundGroupChat.groupMembers,
+    groupChat.groupMembers = [...groupChat.groupMembers, newGroupMemberCreated];
+    await this.groupChatRepository.save(groupChat);
+
+    groupMember.groupMembers = [
+      ...groupMember.groupMembers,
       newGroupMemberCreated,
     ];
-    await this.groupChatRepository.save(foundGroupChat);
-
-    const foundUser = await this.userRepository.findOne({
-      where: { userId: groupMember.userId },
-    });
-    foundUser.groupMembers = [...foundUser.groupMembers, newGroupMemberCreated];
-    await this.userRepository.save(foundUser);
+    await this.userRepository.save(groupMember);
 
     return newGroupMemberCreated;
   }
@@ -91,16 +95,16 @@ export class GroupMemberRepository {
     });
     foundUser.groupMembers = foundUser.groupMembers.filter(
       (member) => member.group_member_id !== groupMember.group_member_id,
-    );;
+    );
     await this.userRepository.save(foundUser);
 
     return deletedResult;
   }
-  
+
   async addMemberToGroup(
     groupChat: GroupChat,
     groupMember: User,
-    role: 'user' | 'leader',
+    role: GroupMemberRole,
   ): Promise<GroupMember> {
     return await this.groupMemberRepository.manager.transaction(
       async (manager: EntityManager) => {
@@ -132,12 +136,14 @@ export class GroupMemberRepository {
         const foundUser = await manager.findOne(User, {
           where: { userId: groupMember.userId },
         });
-        foundUser.groupMembers = [...foundUser.groupMembers, newGroupMemberCreated];
+        foundUser.groupMembers = [
+          ...foundUser.groupMembers,
+          newGroupMemberCreated,
+        ];
         await manager.save(foundUser);
 
         return newGroupMemberCreated;
       },
     );
   }
-
 }
