@@ -105,29 +105,34 @@ export class GatewaysGateway
 
   @OnEvent(GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS)
   handleAddNewMembers(payload: AddNewMemberEventPayload) {
-    // TODO 1: Take the group id
-    // TODO 2: Emit an event called 'onGroupAddMembers along with the payload
-    // Make sure that emit to a room name 'group-${group id}'
+    const { groupChat } = payload;
+    const roomName = `group-${groupChat.group_id}`;
+    this.server.to(roomName).emit('onGroupAddMembers', payload);
   }
 
   @OnEvent(GROUP_MEMBER_EVENT.REMOVE_MEMBER)
   handleRemoveMember(payload: RemoveMemberEventPayload) {
-    // TODO 1: Take the group id
-    // TODO 2: Find the socket of member that is removed
-    // If found, make that user leave the room
-    // If not then don't do anything
-    // TODO 3: Emit an event called 'onGroupRemoveMember' along with the payload
-    // Make sure that emit to a room name 'group-${group id}'
+    const { groupChat, removedMember } = payload;
+    const roomName = `group-${groupChat.group_id}`;
+    const removedUserId = removedMember.user_id.userId;
+    const removeUserSocket = this.gatewaySession.getClientSocket(removedUserId);
+    if (removeUserSocket) {
+      removeUserSocket.leave(roomName);
+    }
+    this.server.to(roomName).emit('onGroupRemoveMember', payload);
   }
 
   @OnEvent(GROUP_MEMBER_EVENT.LEAVE_GROUP)
   handleLeaveGroup(payload: LeaveGroupEventPayload) {
     // TODO 1: Take the group id
-    // TODO 2: Find the socket of member that leave
-    // If found, make that user leave the room
-    // If not then don't do anything
-    // TODO 3: Emit an event called 'onGroupLeave' along with the payload
-    // Make sure that emit to a room name 'group-${group id}'
+    const { groupChat, leaveMember } = payload;
+    const roomName = `group-${groupChat.group_id}`;
+    const leaveUserId = leaveMember.user_id.userId;
+    const leaveUserSocket = this.gatewaySession.getClientSocket(leaveUserId);
+    if (leaveUserSocket) {
+      leaveUserSocket.leave(roomName);
+    }
+    this.server.to(roomName).emit('onGroupLeave', payload);
   }
 
   @OnEvent(GROUP_MESSAGE_EVENT.SEND_GROUP_MESSAGE)

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GroupChat } from '../entities/group-chat.entity';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { GroupMember } from '../entities/group-member.entity';
 import { GroupMemberRole } from 'src/common/enum/group-member-role.enum';
@@ -37,13 +37,19 @@ export class GroupMemberRepository {
   async findGroupMemberById(
     groupMemberId: number,
   ): Promise<GroupMember | null> {
-    const foundGroupMember = await this.groupMemberRepository.findOne({
-      where: { group_member_id: groupMemberId },
-      relations: {
-        group_id: true,
-        user_id: true,
-      },
-    });
+    const foundGroupMember = await this.groupMemberRepository
+      .createQueryBuilder('groupmember')
+      .leftJoinAndSelect('groupmember.user_id', 'user')
+      .leftJoinAndSelect('groupmember.group_id', 'group')
+      .where('groupmember.group_member_id = :id', { id: groupMemberId })
+      .select([
+        'user.user_id',
+        'user.username',
+        'user.avatar_url',
+        'group.group_id',
+        'group.group_name',
+      ])
+      .execute();
     return foundGroupMember;
   }
 
@@ -82,13 +88,10 @@ export class GroupMemberRepository {
       })
       .execute();
 
-    const foundGroupChat = await this.groupChatRepository.findOne({
-      where: { group_id: groupChat.group_id },
-    });
-    foundGroupChat.groupMembers = foundGroupChat.groupMembers.filter(
+    groupChat.groupMembers = groupChat.groupMembers.filter(
       (member) => member.group_member_id !== groupMember.group_member_id,
     );
-    await this.groupChatRepository.save(foundGroupChat);
+    await this.groupChatRepository.save(groupChat);
 
     const foundUser = await this.userRepository.findOne({
       where: { userId: groupMember.user_id.userId },
@@ -98,52 +101,10 @@ export class GroupMemberRepository {
     );
     await this.userRepository.save(foundUser);
 
-    return deletedResult;
-  }
-
-  async addMemberToGroup(
-    groupChat: GroupChat,
-    groupMember: User,
-    role: GroupMemberRole,
-  ): Promise<GroupMember> {
-    return await this.groupMemberRepository.manager.transaction(
-      async (manager: EntityManager) => {
-        const existingMember = await manager.findOne(GroupMember, {
-          where: { group_id: groupChat, user_id: groupMember },
-        });
-
-        if (existingMember) {
-          throw new Error('Already joined');
-        }
-
-        const newGroupMember = new GroupMember();
-        newGroupMember.group_id = groupChat;
-        newGroupMember.user_id = groupMember;
-        newGroupMember.role = role;
-        newGroupMember.joined_at = new Date();
-
-        const newGroupMemberCreated = await manager.save(newGroupMember);
-
-        const foundGroupChat = await manager.findOne(GroupChat, {
-          where: { group_id: groupChat.group_id },
-        });
-        foundGroupChat.groupMembers = [
-          ...foundGroupChat.groupMembers,
-          newGroupMemberCreated,
-        ];
-        await manager.save(foundGroupChat);
-
-        const foundUser = await manager.findOne(User, {
-          where: { userId: groupMember.userId },
-        });
-        foundUser.groupMembers = [
-          ...foundUser.groupMembers,
-          newGroupMemberCreated,
-        ];
-        await manager.save(foundUser);
-
-        return newGroupMemberCreated;
-      },
+    console.log(
+      '🚀 ~ GroupMemberRepository ~ deleteGroupMember ~ deletedResult:',
+      deletedResult,
     );
+    return deletedResult;
   }
 }
