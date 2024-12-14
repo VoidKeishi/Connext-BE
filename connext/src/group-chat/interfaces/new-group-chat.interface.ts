@@ -1,4 +1,4 @@
 export interface INewGroupChat {
-  createdBy: string;
+  createdBy: number;
   members: number[];
 }

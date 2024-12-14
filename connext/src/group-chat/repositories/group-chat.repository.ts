@@ -16,8 +16,20 @@ export class GroupChatRepository {
   async findGroupChatById(id: number): Promise<GroupChat> {
     const foundGroupChat = await this.groupChatRepository.findOne({
       where: { group_id: id },
+      relations: {
+        created_by: true,
+      },
     });
     return foundGroupChat;
+  }
+
+  async findUserGroupChats(userId: number): Promise<GroupChat[]> {
+    const foundGroupChats = await this.groupChatRepository
+      .createQueryBuilder('groupchat')
+      .leftJoinAndSelect('groupchat.created_by', 'user')
+      .where('user.user_id = :id', { id: userId })
+      .getMany();
+    return foundGroupChats;
   }
 
   async createNewGroupChat(createdBy: User): Promise<GroupChat> {

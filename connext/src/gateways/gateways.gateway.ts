@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   WebSocketGateway,
   SubscribeMessage,
@@ -44,7 +45,7 @@ export class GatewaysGateway
   @WebSocketServer()
   server: Server;
 
-  handleConnection(socket: AuthenticatedSocket, ...args: any[]) {
+  handleConnection(socket: AuthenticatedSocket, ..._args: any[]) {
     console.log('Incoming Connection');
     this.gatewaySession.setSocket(socket.user.userId, socket);
     console.log(`Client ${socket.user.userId} connected!`);
@@ -84,16 +85,22 @@ export class GatewaysGateway
 
   @OnEvent(GROUP_CHAT_EVENT.CREATE_NEW_GROUP_CHAT)
   handleCreateNewGroupChat(payload: CreateGroupChatEventPayload) {
-    // TODO 1: Take the all id of user
-    // TODO 2: Get gatewaySessions, make a loop with it
-    // For each clientId that match the id of user in payload, emit an event called 'onGroupChatCreate'
-    // along with the payload: CreateGroupChatEventPayload
+    const { members } = payload;
+    for (let i = 0; i < members.length; i++) {
+      const userSocket = this.gatewaySession.getClientSocket(
+        members[i].user_id.userId,
+      );
+      if (userSocket) userSocket.emit('onGroupChatCreate', payload);
+    }
   }
 
   @OnEvent(GROUP_CHAT_EVENT.UPDATE_GROUP_CHAT_NAME)
   handleUpdateGroupChatName(payload: UpdateGroupChatNameEventPayload) {
-    // The same approach as handleCreateNewGroupChat.
-    // Except this time we will emit and event called 'onGroupChatUpdateName'.
+    const { members } = payload;
+    for (let i = 0; i < members.length; i++) {
+      const userSocket = this.gatewaySession.getClientSocket(members[i]);
+      if (userSocket) userSocket.emit('onGroupChatUpdateName', payload);
+    }
   }
 
   @OnEvent(GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS)

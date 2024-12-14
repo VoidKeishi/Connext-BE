@@ -5,7 +5,6 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -38,8 +37,4 @@ export class GroupChat {
 
   @OneToMany(() => GroupMessage, (groupMessage) => groupMessage.group_id)
   groupMessages: GroupMessage[];
-
-  @ManyToMany(() => User, user => user.groups)
-  members: User[]; 
-
 }
