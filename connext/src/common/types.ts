@@ -39,11 +39,11 @@ export type SendGroupMessageEventPayload = {
   groupMessage: GroupMessage;
 };
 
-export type NewFriendRequest = {
+export type NewFriendRequestEventPayload = {
   newFriendRequest: Friendship;
 };
 
-export type AcceptFriendRequest = {
+export type AcceptFriendRequestEventPayload = {
   senderConversation: Conversation;
   recipientConversation: Conversation;
 };

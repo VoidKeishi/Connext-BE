@@ -10,11 +10,11 @@ import { Server } from 'socket.io';
 import { GatewaySessions } from './gateways.session';
 import { AuthenticatedSocket } from './interfaces/AuthenticatedSocket';
 import {
-  AcceptFriendRequest,
+  AcceptFriendRequestEventPayload,
   AddNewMemberEventPayload,
   CreateGroupChatEventPayload,
   LeaveGroupEventPayload,
-  NewFriendRequest,
+  NewFriendRequestEventPayload,
   RemoveMemberEventPayload,
   SendGroupMessageEventPayload,
   SendMessageEventPayload,
@@ -143,17 +143,26 @@ export class GatewaysGateway
   }
 
   @OnEvent(FRIEND_EVENT.NEW_FRIEND_REQUEST)
-  handleNewFriendRequest(payload: NewFriendRequest) {
-    // TODO 1: Take the sender and recipient ID
-    // TODO 2: Emit and event called 'onNewFriendRequest' along with the payload
+  handleNewFriendRequest(payload: NewFriendRequestEventPayload) {
+    const { newFriendRequest } = payload;
+    const senderId = newFriendRequest.user_id.userId;
+    const recipientId = newFriendRequest.friend_user_id.userId;
+    const senderSocket = this.gatewaySession.getClientSocket(senderId);
+    const recipientSocket = this.gatewaySession.getClientSocket(recipientId);
+    if (senderSocket) senderSocket.emit('onNewFriendRequest', payload);
+    if (recipientSocket) recipientSocket.emit('onNewFriendRequest', payload);
   }
 
   @OnEvent(FRIEND_EVENT.ACCEPT_FRIEND_REQUEST)
-  handleAcceptFriendRequest(payload: AcceptFriendRequest) {
-    // TODO 1: Take the senderId by using the payload.senderConversation.sender_id.userId
-    // TODO 2: Take the recipientId by using the payload.senderConversation.recipient_id.userId
-    // TODO 3: Emit and event called 'onAcceptFriendRequest' along with the payload
-    // payload.senderConversation to senderId socket
-    // payload.recipientConversation to recipientId socket
+  handleAcceptFriendRequest(payload: AcceptFriendRequestEventPayload) {
+    const { senderConversation, recipientConversation } = payload;
+    const senderId = senderConversation.sender_id.userId;
+    const recipientId = senderConversation.recipient_id.userId;
+    const senderSocket = this.gatewaySession.getClientSocket(senderId);
+    const recipientSocket = this.gatewaySession.getClientSocket(recipientId);
+    if (senderSocket)
+      senderSocket.emit('onAcceptFriendRequest', senderConversation);
+    if (recipientSocket)
+      recipientSocket.emit('onAcceptFriendRequest', recipientConversation);
   }
 }
