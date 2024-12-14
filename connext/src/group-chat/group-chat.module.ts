@@ -12,6 +12,8 @@ import { GroupMemberRepository } from './repositories/group-member.repository';
 import { GroupMemberController } from './controllers/group-member.controller';
 import { GroupMemberService } from './services/group-member.service';
 import { GroupMessageController } from './controllers/group-message.controller';
+import { GroupMessageService } from './services/group-message.service';
+import { GroupMessageRepository } from './repositories/group-message.repository';
 
 @Module({
   imports: [
@@ -26,8 +28,10 @@ import { GroupMessageController } from './controllers/group-message.controller';
   providers: [
     GroupChatService,
     GroupMemberService,
+    GroupMessageService,
     GroupChatRepository,
     GroupMemberRepository,
+    GroupMessageRepository,
   ],
 })
 export class GroupChatModule {}

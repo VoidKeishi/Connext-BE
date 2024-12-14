@@ -34,9 +34,16 @@ export class FriendsService {
       throw new NotFoundException('Sender not found');
     }
 
+    const foundFriendRequest =
+      await this.friendshipRepository.getUserFriendRequestBySenderAndRecipient(
+        sender,
+        recipient,
+      );
+    if (foundFriendRequest)
+      throw new BadRequestException('Friend request already exist!');
+
     const createdFriendRequest =
       await this.friendshipRepository.createNewFriendRequest(sender, recipient);
-
     return createdFriendRequest;
   }
 

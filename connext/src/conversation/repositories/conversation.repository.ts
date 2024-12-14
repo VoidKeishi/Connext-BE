@@ -56,12 +56,12 @@ export class ConversationRepository {
     const newConversationData =
       await this.conversationRepostitory.save(newConversation);
 
-    sender.senders = [...sender.senders, newConversationData];
-    sender.recipients = [...sender.recipients, newConversation];
-
-    recipient.senders = [...recipient.senders, newConversation];
-    recipient.recipients = [...recipient.recipients, newConversation];
-
+    if (newConversationData.sender_id) {
+      newConversationData.sender_id.passwordHashed = '';
+    }
+    if (newConversationData.recipient_id) {
+      newConversationData.recipient_id.passwordHashed = '';
+    }
     return newConversationData;
   }
 }
