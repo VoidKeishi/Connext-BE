@@ -14,20 +14,33 @@ export class GroupChatRepository {
   ) {}
 
   async findGroupChatById(id: number): Promise<GroupChat> {
-    const foundGroupChat = await this.groupChatRepository.findOne({
-      where: { group_id: id },
-      relations: {
-        created_by: true,
-      },
-    });
+    const foundGroupChat = await this.groupChatRepository
+      .createQueryBuilder('groupchat')
+      .leftJoinAndSelect('groupchat.created_by', 'user')
+      .where('groupchat.group_id = :groupId', { groupId: id })
+      .select([
+        'groupchat',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.avatarUrl',
+      ])
+      .getOne();
     return foundGroupChat;
   }
 
-  async findUserGroupChats(userId: number): Promise<GroupChat[]> {
+  async findUserCreatedGroupChats(userId: number): Promise<GroupChat[]> {
     const foundGroupChats = await this.groupChatRepository
       .createQueryBuilder('groupchat')
       .leftJoinAndSelect('groupchat.created_by', 'user')
       .where('user.user_id = :id', { id: userId })
+      .select([
+        'groupchat',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.avatarUrl',
+      ])
       .getMany();
     return foundGroupChats;
   }
@@ -40,11 +53,8 @@ export class GroupChatRepository {
       await this.groupChatRepository.save(newGroupChat);
 
     // Add this new groupchat to user's groups field
-    const foundUser = await this.userRepository.findOne({
-      where: { userId: createdBy.userId },
-    });
-    foundUser.groups = [...foundUser.groups, newGroupChatCreated];
-    await this.userRepository.save(foundUser);
+    createdBy.groups = [...createdBy.groups, newGroupChatCreated];
+    await this.userRepository.save(createdBy);
 
     return newGroupChatCreated;
   }
