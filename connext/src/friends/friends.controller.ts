@@ -36,12 +36,11 @@ export class FriendsController {
   async acceptFriendRequest(
     @Body() responseFriendRequestData: ResponseFriendRequestDto,
   ) {
-    const newConversations = await this.friendsService.acceptFriendRequest({
+    const newConversation = await this.friendsService.acceptFriendRequest({
       friendRequestId: responseFriendRequestData.friendRequestId,
     });
     this.eventEmitter.emit(FRIEND_EVENT.ACCEPT_FRIEND_REQUEST, {
-      senderConversation: newConversations[0],
-      recipientConversation: newConversations[1],
+      newConversation: newConversation,
     });
     return;
   }

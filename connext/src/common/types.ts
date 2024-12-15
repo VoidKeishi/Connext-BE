@@ -44,6 +44,5 @@ export type NewFriendRequestEventPayload = {
 };
 
 export type AcceptFriendRequestEventPayload = {
-  senderConversation: Conversation;
-  recipientConversation: Conversation;
+  newConversation: Conversation;
 };

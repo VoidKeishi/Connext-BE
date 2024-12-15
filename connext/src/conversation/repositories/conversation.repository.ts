@@ -15,9 +15,19 @@ export class ConversationRepository {
     const foundConversation = await this.conversationRepostitory
       .createQueryBuilder('conversation')
       .where('conversation.conversation_id = :id', { id })
-      .leftJoinAndSelect('conversation.sender_id', 'sender')
-      .leftJoinAndSelect('conversation.recipient_id', 'recipient')
-      .select(['conversation', 'sender.userId', 'recipient.userId'])
+      .leftJoinAndSelect(
+        'conversation.first_participant_id',
+        'first_participant',
+      )
+      .leftJoinAndSelect(
+        'conversation.second_participant_id',
+        'second_participant',
+      )
+      .select([
+        'conversation',
+        'first_participant.userId',
+        'second_participant.userId',
+      ])
       .getOne();
 
     return foundConversation;
@@ -26,19 +36,26 @@ export class ConversationRepository {
   async getConversations(userId: number): Promise<Conversation[]> {
     const foundConversations = await this.conversationRepostitory
       .createQueryBuilder('conversation')
-      .leftJoinAndSelect('conversation.sender_id', 'sender')
-      .leftJoinAndSelect('conversation.recipient_id', 'recipient')
-      .where('sender.user_id = :userId', { userId: userId })
+      .leftJoinAndSelect(
+        'conversation.first_participant_id',
+        'first_participant',
+      )
+      .leftJoinAndSelect(
+        'conversation.second_participant_id',
+        'second_participant',
+      )
+      .where('first_participant.user_id = :userId', { userId: userId })
+      .orWhere('second_participant.user_id = :userId', { userId: userId })
       .select([
         'conversation',
-        'sender.userId',
-        'sender.username',
-        'sender.avatar_url',
-        'sender.is_online',
-        'recipient.userId',
-        'recipient.username',
-        'recipient.avatar_url',
-        'recipient.is_online',
+        'first_participant.userId',
+        'first_participant.username',
+        'first_participant.avatar_url',
+        'first_participant.is_online',
+        'second_participant.userId',
+        'second_participant.username',
+        'second_participant.avatar_url',
+        'second_participant.is_online',
       ])
       .getMany();
 
@@ -46,21 +63,21 @@ export class ConversationRepository {
   }
 
   async createNewConversation(
-    sender: User,
-    recipient: User,
+    firstParticipant: User,
+    secondParticipant: User,
   ): Promise<Conversation> {
     const newConversation = new Conversation();
     newConversation.last_message_sent_at = null;
-    newConversation.sender_id = sender;
-    newConversation.recipient_id = recipient;
+    newConversation.first_participant_id = firstParticipant;
+    newConversation.second_participant_id = secondParticipant;
     const newConversationData =
       await this.conversationRepostitory.save(newConversation);
 
-    if (newConversationData.sender_id) {
-      newConversationData.sender_id.passwordHashed = '';
+    if (newConversationData.first_participant_id) {
+      newConversationData.first_participant_id.passwordHashed = '';
     }
-    if (newConversationData.recipient_id) {
-      newConversationData.recipient_id.passwordHashed = '';
+    if (newConversationData.second_participant_id) {
+      newConversationData.second_participant_id.passwordHashed = '';
     }
     return newConversationData;
   }

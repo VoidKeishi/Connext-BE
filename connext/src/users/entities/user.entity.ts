@@ -51,10 +51,16 @@ export class User {
   @Column({ name: 'role', enum: Role, default: Role.User })
   role: Role;
 
-  @OneToMany(() => Conversation, (conversation) => conversation.sender_id)
+  @OneToMany(
+    () => Conversation,
+    (conversation) => conversation.first_participant_id,
+  )
   senders: Conversation[];
 
-  @OneToMany(() => Conversation, (conversation) => conversation.recipient_id)
+  @OneToMany(
+    () => Conversation,
+    (conversation) => conversation.second_participant_id,
+  )
   recipients: Conversation[];
 
   @OneToMany(() => Friendship, (friendship) => friendship.user_id)

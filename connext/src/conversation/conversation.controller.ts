@@ -1,13 +1,13 @@
-import { Controller, Get, Req } from '@nestjs/common';
-import { ConversationService } from './conversation.service';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { ConversationRepository } from './repositories/conversation.repository';
 import { Request } from 'express';
 import { Conversation } from './entities/conversation.entity';
+import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
-@Controller('conversation')
+@Controller('conversations')
+@UseGuards(AuthGuard)
 export class ConversationController {
   constructor(
-    private readonly conversationService: ConversationService,
     private readonly conversationRepository: ConversationRepository,
   ) {}
 

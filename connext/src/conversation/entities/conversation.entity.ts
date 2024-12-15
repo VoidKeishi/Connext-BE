@@ -15,12 +15,12 @@ export class Conversation {
   conversation_id: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'sender_id' })
-  sender_id: User;
+  @JoinColumn({ name: 'first_participant_id' })
+  first_participant_id: User;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'recipient_id' })
-  recipient_id: User;
+  @JoinColumn({ name: 'second_participant_id' })
+  second_participant_id: User;
 
   @Column('text', { default: 'Lets say hi to each other!' })
   last_message: string;
