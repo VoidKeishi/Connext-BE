@@ -10,7 +10,7 @@ import {
 export class UpdateUserDto {
   @IsString()
   @IsOptional()
-  username?: string;
+  userName?: string;
 
   @IsString()
   @IsOptional()
@@ -26,11 +26,14 @@ export class UpdateUserDto {
   dateOfBirth?: Date;
 
   @IsBoolean()
-  isOnline: boolean;
+  @IsOptional()
+  isOnline?: boolean;
 
   @IsDate()
-  lastActiveAt: Date;
+  @IsOptional()
+  lastActiveAt?: Date;
 
   @IsDate()
-  lastLogin: Date;
+  @IsOptional()
+  lastLogin?: Date;
 }

@@ -1,11 +1,13 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { MESSAGE_EVENT } from 'src/common/constants/event.constant';
 import { GetMessageDto } from './dto/get-message.dto';
+import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('messages')
+@UseGuards(AuthGuard)
 export class MessagesController {
   constructor(
     private readonly messagesService: MessagesService,

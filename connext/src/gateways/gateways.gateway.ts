@@ -71,12 +71,14 @@ export class GatewaysGateway
   handleSendMessageEvent(payload: SendMessageEventPayload) {
     const {
       message: {
-        conversation_id: { sender_id, recipient_id },
+        conversation_id: { first_participant_id, second_participant_id },
       },
     } = payload;
-    const senderSocket = this.gatewaySession.getClientSocket(sender_id.userId);
+    const senderSocket = this.gatewaySession.getClientSocket(
+      first_participant_id.userId,
+    );
     const recipientSocket = this.gatewaySession.getClientSocket(
-      recipient_id.userId,
+      second_participant_id.userId,
     );
 
     if (senderSocket) senderSocket.emit('onMessage', payload);
@@ -155,14 +157,16 @@ export class GatewaysGateway
 
   @OnEvent(FRIEND_EVENT.ACCEPT_FRIEND_REQUEST)
   handleAcceptFriendRequest(payload: AcceptFriendRequestEventPayload) {
-    const { senderConversation, recipientConversation } = payload;
-    const senderId = senderConversation.sender_id.userId;
-    const recipientId = senderConversation.recipient_id.userId;
-    const senderSocket = this.gatewaySession.getClientSocket(senderId);
-    const recipientSocket = this.gatewaySession.getClientSocket(recipientId);
-    if (senderSocket)
-      senderSocket.emit('onAcceptFriendRequest', senderConversation);
-    if (recipientSocket)
-      recipientSocket.emit('onAcceptFriendRequest', recipientConversation);
+    const { newConversation } = payload;
+    const firstParticipant = newConversation.first_participant_id.userId;
+    const secondParticipant = newConversation.second_participant_id.userId;
+    const firstParticipantSocket =
+      this.gatewaySession.getClientSocket(firstParticipant);
+    const secondParticipantSocket =
+      this.gatewaySession.getClientSocket(secondParticipant);
+    if (firstParticipantSocket)
+      firstParticipantSocket.emit('onAcceptFriendRequest', newConversation);
+    if (secondParticipantSocket)
+      secondParticipantSocket.emit('onAcceptFriendRequest', newConversation);
   }
 }

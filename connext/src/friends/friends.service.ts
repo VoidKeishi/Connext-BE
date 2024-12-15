@@ -67,20 +67,15 @@ export class FriendsService {
       FRIENDSHIP_STATUS.FRIEND,
     );
 
-    const sender = friendRequest.user_id;
-    const recipient = friendRequest.friend_user_id;
-    const conversationSender =
+    const firstParticipant = friendRequest.user_id;
+    const secondParticipant = friendRequest.friend_user_id;
+    const conversation =
       await this.conversationRepository.createNewConversation(
-        sender,
-        recipient,
-      );
-    const conversationRecipient =
-      await this.conversationRepository.createNewConversation(
-        recipient,
-        sender,
+        firstParticipant,
+        secondParticipant,
       );
 
-    return [conversationSender, conversationRecipient];
+    return conversation;
   }
 
   async rejectFriendRequest(rejectFriendRequest: IResponseFriendRequest) {

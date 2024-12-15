@@ -47,7 +47,6 @@ export class MessagesService {
   }
 
   async createNewMessage(data: INewMessage) {
-    // Find conversation
     const foundConversation =
       await this.conversationRepository.findConversationById(
         data.conversationId,
@@ -55,18 +54,24 @@ export class MessagesService {
     if (!foundConversation)
       throw new NotFoundException('No conversation found!');
 
-    // Find recipient
     const foundRecipient = await this.userRespository.findOneById(
       data.recipientId,
     );
     if (!foundRecipient) throw new NotFoundException('No recipient found!');
 
-    // Check if sender_id and recipient_id that client sent
-    // is the same as the conversation sender_id and recipient_id
-    if (data.senderId !== foundConversation.sender_id.userId) {
+    if (data.senderId === data.recipientId)
+      throw new BadRequestException('Can not send message to yourself!');
+
+    if (
+      !(data.senderId == foundConversation.first_participant_id.userId) &&
+      !(data.senderId == foundConversation.second_participant_id.userId)
+    ) {
       throw new BadRequestException('Sender ID is not valid');
     }
-    if (data.recipientId !== foundConversation.recipient_id.userId) {
+    if (
+      !(data.recipientId == foundConversation.second_participant_id.userId) &&
+      !(data.recipientId == foundConversation.first_participant_id.userId)
+    ) {
       throw new BadRequestException('Recipient ID is not valid');
     }
 
