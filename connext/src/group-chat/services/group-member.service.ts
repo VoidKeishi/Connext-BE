@@ -15,6 +15,7 @@ import {
 import { IRemoveMember } from '../interfaces/remove-member.interface';
 import { ILeaveGroup } from '../interfaces/leave-group.interface';
 import { GroupMemberRole } from 'src/common/enum/group-member-role.enum';
+import { GroupMember } from '../entities/group-member.entity';
 
 @Injectable()
 export class GroupMemberService {
@@ -31,6 +32,8 @@ export class GroupMemberService {
 
     const issuerUser =
       await this.groupMemberRepository.findGroupMemberById(issuer);
+    if (!issuerUser)
+      throw new NotFoundException('Issuer does not exist in this group');
     if (issuerUser.role !== GroupMemberRole.LEADER) {
       throw new BadRequestException('Only a leader can add new members.');
     }
@@ -79,6 +82,8 @@ export class GroupMemberService {
 
     const issuerUser =
       await this.groupMemberRepository.findGroupMemberById(issuer);
+    if (!issuerUser)
+      throw new NotFoundException('Issuer does not exist in this group');
     if (issuerUser.role !== GroupMemberRole.LEADER) {
       throw new BadRequestException('Only a leader can remove a member.');
     }
@@ -128,6 +133,30 @@ export class GroupMemberService {
       throw new NotFoundException('User is not a member of the group.');
     }
 
+    let newLeader: GroupMember;
+    if (groupMember.role === GroupMemberRole.LEADER) {
+      const allGroupMembers =
+        await this.groupMemberRepository.findGroupMemberByGroup(
+          groupChatEntity,
+        );
+      for (let i = 0; i < allGroupMembers.length; i++) {
+        const foundGroupMember =
+          await this.groupMemberRepository.findGroupMemberById(
+            allGroupMembers[i].group_member_id,
+          );
+        if (
+          foundGroupMember.group_member_id !== groupMember.group_member_id &&
+          foundGroupMember.role !== GroupMemberRole.LEADER
+        ) {
+          newLeader = await this.groupMemberRepository.updateGroupMemberRole(
+            foundGroupMember.group_member_id,
+            GroupMemberRole.LEADER,
+          );
+          break;
+        }
+      }
+    }
+
     await this.groupMemberRepository.deleteGroupMember(
       groupMember,
       groupChatEntity,
@@ -136,6 +165,7 @@ export class GroupMemberService {
     return {
       groupChat: groupChatEntity,
       leaveMember: groupMember,
+      newLeader: newLeader,
     };
   }
 }

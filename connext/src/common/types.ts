@@ -32,6 +32,7 @@ export type RemoveMemberEventPayload = {
 export type LeaveGroupEventPayload = {
   groupChat: GroupChat;
   leaveMember: GroupMember;
+  newLeader: GroupMember;
 };
 
 export type SendGroupMessageEventPayload = {
