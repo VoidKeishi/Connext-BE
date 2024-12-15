@@ -12,8 +12,15 @@ export class UserRepository {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async findAllUser(): Promise<User[]> {
-    return await this.userRepository.find();
+  async countTotalUsers(): Promise<number> {
+    return await this.userRepository.count();
+  }
+
+  async findManyUsers(limit: number, offset: number): Promise<User[]> {
+    return await this.userRepository.find({
+      take: limit,
+      skip: (offset - 1) * limit,
+    });
   }
 
   async findOneById(userId: number): Promise<User | null> {

@@ -18,6 +18,24 @@ export class UsersService {
     return excludeObjectKeys(foundUser, ['passwordHashed']);
   }
 
+  async findManyUsers(limit: number, offset: number) {
+    const totalUsers = await this.usersRepository.countTotalUsers();
+    const totalPages = Math.ceil(totalUsers / limit);
+    const foundUsers = await this.usersRepository.findManyUsers(limit, offset);
+    const transformedUsers = foundUsers.map((user) =>
+      excludeObjectKeys(user, ['passwordHashed']),
+    );
+    return {
+      data: transformedUsers,
+      pagination: {
+        totalResult: totalUsers,
+        totalPages: totalPages,
+        currentPage: offset,
+        limitPerPage: limit,
+      },
+    };
+  }
+
   async searchUsers(query: string, limit: number, offset: number) {
     const totalUsers =
       await this.usersRepository.countUsersByEmailOrUsername(query);
