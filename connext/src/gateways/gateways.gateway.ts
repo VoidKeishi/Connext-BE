@@ -5,6 +5,8 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
+  MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { GatewaySessions } from './gateways.session';
@@ -67,6 +69,17 @@ export class GatewaysGateway
     this.server.emit('hello-world', 'Hello World!!!!');
   }
 
+  @SubscribeMessage('onHandleJoinGroupChat')
+  onHandleJoinGroupChat(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    console.log('Inside onHandleJoinGroupChat');
+    client.join(`group-${data.groupId}`);
+    console.log(client.rooms);
+    client.emit('joinGroup', `Group group-${data.groupId} joined!`);
+  }
+
   @OnEvent(MESSAGE_EVENT.SEND_MESSAGE)
   handleSendMessageEvent(payload: SendMessageEventPayload) {
     const {
@@ -98,11 +111,9 @@ export class GatewaysGateway
 
   @OnEvent(GROUP_CHAT_EVENT.UPDATE_GROUP_CHAT_NAME)
   handleUpdateGroupChatName(payload: UpdateGroupChatNameEventPayload) {
-    const { members } = payload;
-    for (let i = 0; i < members.length; i++) {
-      const userSocket = this.gatewaySession.getClientSocket(members[i]);
-      if (userSocket) userSocket.emit('onGroupChatUpdateName', payload);
-    }
+    const { groupChat } = payload;
+    const roomname = `group-${groupChat.group_id}`;
+    this.server.to(roomname).emit('onGroupChatUpdateName', groupChat);
   }
 
   @OnEvent(GROUP_MEMBER_EVENT.ADD_NEW_MEMBERS)

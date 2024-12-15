@@ -27,6 +27,24 @@ export class GroupMemberRepository {
     return foundGroupMember;
   }
 
+  async findGroupMemberByUser(userId: number): Promise<GroupMember[]> {
+    const foundGroupMembers = await this.groupMemberRepository
+      .createQueryBuilder('groupmember')
+      .leftJoinAndSelect('groupmember.user_id', 'user')
+      .leftJoinAndSelect('groupmember.group_id', 'group')
+      .where('user.user_id = :id', { id: userId })
+      .andWhere('groupmember.role = :role', { role: GroupMemberRole.MEMBER })
+      .select([
+        'groupmember',
+        'group',
+        'user.userId',
+        'user.username',
+        'user.avatarUrl',
+      ])
+      .getMany();
+    return foundGroupMembers;
+  }
+
   async findGroupMemberByGroup(groupChat: GroupChat): Promise<GroupMember[]> {
     const foundGroupMembers = await this.groupMemberRepository.find({
       where: { group_id: groupChat },

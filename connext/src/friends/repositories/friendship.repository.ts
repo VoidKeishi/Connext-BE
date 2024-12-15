@@ -12,12 +12,50 @@ export class FriendshipRepository {
     private readonly friendshipRepository: Repository<Friendship>,
   ) {}
 
+  async getOneFriend(
+    userId: number,
+    friendUserId: number,
+  ): Promise<Friendship> {
+    return await this.friendshipRepository
+      .createQueryBuilder('friendship')
+      .leftJoinAndSelect('friendship.user_id', 'user')
+      .leftJoinAndSelect('friendship.friend_user_id', 'friend')
+      .where('user.user_id = :userId or friend.user_id = :friendUserId', {
+        userId: userId,
+        friendUserId: friendUserId,
+      })
+      .orWhere('user.user_id = :userId or friend.user_id = :friendUserId', {
+        userId: friendUserId,
+        friendUserId: userId,
+      })
+      .andWhere('friendship.status = :status', {
+        status: FRIENDSHIP_STATUS.FRIEND,
+      })
+      .select([
+        'friendship',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.nickName',
+        'user.avatarUrl',
+        'user.isOnline',
+        'friend.userId',
+        'friend.username',
+        'friend.email',
+        'friend.nickName',
+        'friend.avatarUrl',
+        'friend.isOnline',
+      ])
+      .getOne();
+  }
+
   async getFriends(userId: number): Promise<Friendship[]> {
     return await this.friendshipRepository
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'user')
       .leftJoinAndSelect('friendship.friend_user_id', 'friend')
       .where('user.user_id = :userId', { userId: userId })
+      .orWhere('friend.user_id = :userId', { userId: userId })
       .andWhere('friendship.status = :status', {
         status: FRIENDSHIP_STATUS.FRIEND,
       })

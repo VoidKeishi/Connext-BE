@@ -12,6 +12,7 @@ import { NotFoundException } from '@nestjs/common';
 import { GroupMember } from '../entities/group-member.entity';
 import { GroupChat } from '../entities/group-chat.entity';
 import { GroupMemberRole } from 'src/common/enum/group-member-role.enum';
+import { FriendshipRepository } from 'src/friends/repositories/friendship.repository';
 
 @Injectable()
 export class GroupChatService {
@@ -19,7 +20,35 @@ export class GroupChatService {
     private readonly userRepository: UserRepository,
     private readonly groupChatRepository: GroupChatRepository,
     private readonly groupMemberRepository: GroupMemberRepository,
+    private readonly friendshipRepository: FriendshipRepository,
   ) {}
+
+  async getUserGroupChats(userId: number): Promise<GroupChat[]> {
+    const userCreatedGroupChats =
+      await this.groupChatRepository.findUserCreatedGroupChats(userId);
+    console.log(
+      '🚀 ~ GroupChatService ~ getUserGroupChats ~ userCreatedGroupChats:',
+      userCreatedGroupChats,
+    );
+    const userJoinedGroupChats =
+      await this.groupMemberRepository.findGroupMemberByUser(userId);
+    console.log(
+      '🚀 ~ GroupChatService ~ getUserGroupChats ~ userJoinedGroupChats:',
+      userJoinedGroupChats,
+    );
+    const userGroupChats = [...userCreatedGroupChats];
+    for (let i = 0; i < userJoinedGroupChats.length; i++) {
+      const foundGroupChat = await this.groupChatRepository.findGroupChatById(
+        userJoinedGroupChats[i].group_id.group_id,
+      );
+      if (foundGroupChat) userGroupChats.push(foundGroupChat);
+    }
+    console.log(
+      '🚀 ~ GroupChatService ~ getUserGroupChats ~ userGroupChats:',
+      userGroupChats,
+    );
+    return userGroupChats;
+  }
 
   async getGroupChatDetail(groupChatId: number): Promise<GroupChat> {
     const foundGroupChat =
@@ -33,6 +62,18 @@ export class GroupChatService {
   ): Promise<CreateGroupChatEventPayload> {
     const { createdBy, members } = newGroupChatData;
 
+    if (members.includes(createdBy))
+      throw new BadRequestException('Can not invite yourself to new group');
+
+    for (let i = 0; i < members.length; i++) {
+      const isFriend = await this.friendshipRepository.getOneFriend(
+        createdBy,
+        members[i],
+      );
+      if (!isFriend)
+        throw new BadRequestException('All member must be your friend');
+    }
+
     const memberUsers = await Promise.all(
       members.map(async (memberId) => {
         const user = await this.userRepository.findOneById(memberId);
@@ -42,6 +83,7 @@ export class GroupChatService {
         return user;
       }),
     );
+
     const creatorUser = await this.userRepository.findOneById(createdBy);
 
     const newGroupChat =
@@ -53,12 +95,12 @@ export class GroupChatService {
       );
     if (foundGroupMember)
       throw new BadRequestException('User already in group chat!');
+
     const creatorMember = await this.groupMemberRepository.createNewGroupMember(
       newGroupChat,
       creatorUser,
       GroupMemberRole.LEADER,
     );
-
     const groupMembers: GroupMember[] = [];
     groupMembers.push(creatorMember);
     for (const memberUser of memberUsers) {
@@ -91,16 +133,8 @@ export class GroupChatService {
       groupName,
     );
 
-    const foundGroupMembers =
-      await this.groupMemberRepository.findGroupMemberByGroup(updatedGroupChat);
-    const foundGroupMemberIds = [];
-    for (let i = 0; i < foundGroupMembers.length; i++) {
-      foundGroupMemberIds.push(foundGroupMembers[i].user_id.userId);
-    }
-
     return {
       groupChat: updatedGroupChat,
-      members: foundGroupMemberIds,
     };
   }
 }

@@ -16,7 +16,6 @@ export type CreateGroupChatEventPayload = {
 
 export type UpdateGroupChatNameEventPayload = {
   groupChat: GroupChat;
-  members: number[];
 };
 
 export type AddNewMemberEventPayload = {
