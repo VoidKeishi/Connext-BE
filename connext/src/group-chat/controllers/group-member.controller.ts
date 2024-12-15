@@ -1,4 +1,13 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { GroupMemberService } from '../services/group-member.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AddNewMemberDto } from '../dto/add-new-member.dto';
@@ -12,14 +21,25 @@ import {
   LeaveGroupEventPayload,
 } from 'src/common/types';
 import { GROUP_MEMBER_EVENT } from 'src/common/constants/event.constant';
+import { GroupMemberRepository } from '../repositories/group-member.repository';
 
 @Controller('group-members')
 @UseGuards(AuthGuard)
 export class GroupMemberController {
   constructor(
     private readonly groupMemberService: GroupMemberService,
+    private readonly grounpMemberRepository: GroupMemberRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  @Get('group/:groupChatId')
+  async getGroupMembers(
+    @Param('groupChatId', ParseIntPipe) groupChatId: number,
+  ) {
+    return await this.grounpMemberRepository.findGroupMemberByGroupId(
+      groupChatId,
+    );
+  }
 
   @Post('/add-new-members')
   async addNewMembers(

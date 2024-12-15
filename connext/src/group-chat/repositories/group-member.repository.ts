@@ -52,6 +52,24 @@ export class GroupMemberRepository {
     return foundGroupMembers;
   }
 
+  async findGroupMemberByGroupId(groupChatId: number): Promise<GroupMember[]> {
+    const foundGroupMembers = await this.groupMemberRepository
+      .createQueryBuilder('groupmember')
+      .leftJoinAndSelect('groupmember.group_id', 'group')
+      .leftJoinAndSelect('groupmember.user_id', 'user')
+      .where('group.group_id = :id', { id: groupChatId })
+      .select([
+        'groupmember',
+        'group',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.avatarUrl',
+      ])
+      .getMany();
+    return foundGroupMembers;
+  }
+
   async findGroupMemberById(
     groupMemberId: number,
   ): Promise<GroupMember | null> {
@@ -94,6 +112,17 @@ export class GroupMemberRepository {
     await this.userRepository.save(groupMember);
 
     return newGroupMemberCreated;
+  }
+
+  async updateGroupMemberRole(groupMemberId: number, newRole: GroupMemberRole) {
+    await this.groupMemberRepository
+      .createQueryBuilder()
+      .update(GroupMember)
+      .set({ role: newRole })
+      .where('group_member_id = :id', { id: groupMemberId })
+      .execute();
+
+    return await this.findGroupMemberById(groupMemberId);
   }
 
   async deleteGroupMember(groupMember: GroupMember, groupChat: GroupChat) {

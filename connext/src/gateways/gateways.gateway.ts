@@ -121,6 +121,14 @@ export class GatewaysGateway
     const { groupChat } = payload;
     const roomName = `group-${groupChat.group_id}`;
     this.server.to(roomName).emit('onGroupAddMembers', payload);
+    const { newMembers } = payload;
+    for (let i = 0; i < newMembers.length; i++) {
+      const foundUserSocket = this.gatewaySession.getClientSocket(
+        newMembers[i].user_id.userId,
+      );
+      if (foundUserSocket)
+        foundUserSocket.emit('onNewMemberJoinGroup', groupChat);
+    }
   }
 
   @OnEvent(GROUP_MEMBER_EVENT.REMOVE_MEMBER)
@@ -131,19 +139,20 @@ export class GatewaysGateway
     const removeUserSocket = this.gatewaySession.getClientSocket(removedUserId);
     if (removeUserSocket) {
       removeUserSocket.leave(roomName);
+      removeUserSocket.emit('onMemberGetRemoved', payload);
     }
     this.server.to(roomName).emit('onGroupRemoveMember', payload);
   }
 
   @OnEvent(GROUP_MEMBER_EVENT.LEAVE_GROUP)
   handleLeaveGroup(payload: LeaveGroupEventPayload) {
-    // TODO 1: Take the group id
     const { groupChat, leaveMember } = payload;
     const roomName = `group-${groupChat.group_id}`;
     const leaveUserId = leaveMember.user_id.userId;
     const leaveUserSocket = this.gatewaySession.getClientSocket(leaveUserId);
     if (leaveUserSocket) {
       leaveUserSocket.leave(roomName);
+      leaveUserSocket.emit('onGroupLeave', payload);
     }
     this.server.to(roomName).emit('onGroupLeave', payload);
   }
