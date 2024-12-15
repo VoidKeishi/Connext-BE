@@ -13,11 +13,20 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SearchUserDto } from './dto/search-user.dto';
+import { FindManyUserDto } from './dto/find-many-user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  async findManyUsers(@Query() findManyUsersData: FindManyUserDto) {
+    return await this.usersService.findManyUsers(
+      findManyUsersData.limit,
+      findManyUsersData.offset,
+    );
+  }
 
   @Get('/search')
   async searchUsers(@Query() searchUserData: SearchUserDto) {
