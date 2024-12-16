@@ -20,6 +20,9 @@ export class FriendsService {
   ) {}
 
   async createNewFriendRequest(newFriendRequest: INewFriendRequest) {
+    if (newFriendRequest.senderId === newFriendRequest.recipientId)
+      throw new BadRequestException('Can not send friend request to yourself!');
+
     const recipient = await this.userRepository.findOneById(
       newFriendRequest.recipientId,
     );
@@ -39,8 +42,18 @@ export class FriendsService {
         sender,
         recipient,
       );
-    if (foundFriendRequest)
+    if (
+      foundFriendRequest &&
+      foundFriendRequest.status === FRIENDSHIP_STATUS.PENDING
+    )
       throw new BadRequestException('Friend request already exist!');
+    if (
+      foundFriendRequest &&
+      foundFriendRequest.status === FRIENDSHIP_STATUS.FRIEND
+    )
+      throw new BadRequestException(
+        `${foundFriendRequest.friend_user_id.username} is already your friend`,
+      );
 
     const createdFriendRequest =
       await this.friendshipRepository.createNewFriendRequest(sender, recipient);
@@ -61,6 +74,9 @@ export class FriendsService {
         'This friend request has already been accepted',
       );
     }
+
+    if (friendRequest.user_id.userId === acceptFriendRequest.issuer)
+      throw new BadRequestException('Can not accept your own friend request');
 
     await this.friendshipRepository.updateFriendRequestStatus(
       acceptFriendRequest.friendRequestId,
@@ -86,6 +102,9 @@ export class FriendsService {
     if (!friendRequest) {
       throw new NotFoundException('No friend request found!');
     }
+
+    if (friendRequest.user_id.userId === rejectFriendRequest.issuer)
+      throw new BadRequestException('Can not reject your own friend request');
 
     const deleteResult = await this.friendshipRepository.deleteFriendRequest(
       rejectFriendRequest.friendRequestId,

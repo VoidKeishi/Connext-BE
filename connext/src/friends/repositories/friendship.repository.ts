@@ -88,7 +88,34 @@ export class FriendshipRepository {
       .getOne();
   }
 
-  async getFriendRequests(userId: number): Promise<Friendship[]> {
+  async getReceivedFriendRequests(userId: number): Promise<Friendship[]> {
+    return await this.friendshipRepository
+      .createQueryBuilder('friendship')
+      .leftJoinAndSelect('friendship.user_id', 'user')
+      .leftJoinAndSelect('friendship.friend_user_id', 'friend')
+      .where('friend.user_id = :userId', { userId: userId })
+      .andWhere('friendship.status = :status', {
+        status: FRIENDSHIP_STATUS.PENDING,
+      })
+      .select([
+        'friendship',
+        'user.userId',
+        'user.username',
+        'user.email',
+        'user.nickName',
+        'user.avatarUrl',
+        'user.isOnline',
+        'friend.userId',
+        'friend.username',
+        'friend.email',
+        'friend.nickName',
+        'friend.avatarUrl',
+        'friend.isOnline',
+      ])
+      .getMany();
+  }
+
+  async getSentFriendRequests(userId: number): Promise<Friendship[]> {
     return await this.friendshipRepository
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'user')
@@ -123,10 +150,14 @@ export class FriendshipRepository {
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'sender')
       .leftJoinAndSelect('friendship.friend_user_id', 'recipient')
-      .where('sender.user_id = :senderId', { senderId: sender.userId })
-      .andWhere('recipient.user_id = :recipientId', {
-        recipientId: recipient.userId,
-      })
+      .where(
+        'sender.user_id = :senderId AND recipient.user_id = :recipientId',
+        { senderId: sender.userId, recipientId: recipient.userId },
+      )
+      .orWhere(
+        'sender.user_id = :recipientId AND recipient.user_id = :senderId',
+        { senderId: sender.userId, recipientId: recipient.userId },
+      )
       .getOne();
   }
 
