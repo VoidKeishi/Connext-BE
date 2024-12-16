@@ -16,11 +16,13 @@ import { IRemoveMember } from '../interfaces/remove-member.interface';
 import { ILeaveGroup } from '../interfaces/leave-group.interface';
 import { GroupMemberRole } from 'src/common/enum/group-member-role.enum';
 import { GroupMember } from '../entities/group-member.entity';
+import { FriendshipRepository } from 'src/friends/repositories/friendship.repository';
 
 @Injectable()
 export class GroupMemberService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly friendshipRepository: FriendshipRepository,
     private readonly groupChatRepository: GroupChatRepository,
     private readonly groupMemberRepository: GroupMemberRepository,
   ) {}
@@ -30,18 +32,25 @@ export class GroupMemberService {
   ): Promise<AddNewMemberEventPayload> {
     const { groupChat, issuer, members } = addNewMembersData;
 
-    const issuerUser =
-      await this.groupMemberRepository.findGroupMemberById(issuer);
-    if (!issuerUser)
-      throw new NotFoundException('Issuer does not exist in this group');
-    if (issuerUser.role !== GroupMemberRole.LEADER) {
-      throw new BadRequestException('Only a leader can add new members.');
-    }
-
     const groupChatEntity =
       await this.groupChatRepository.findGroupChatById(groupChat);
     if (!groupChatEntity) {
       throw new BadRequestException('Group chat does not exist.');
+    }
+
+    const foundIssuer = await this.userRepository.findOneById(issuer);
+    if (!foundIssuer) throw new BadRequestException('Issuer does not exist!');
+
+    const issuerUser =
+      await this.groupMemberRepository.findGroupMemberByGroupAndUser(
+        groupChatEntity,
+        foundIssuer,
+      );
+
+    if (!issuerUser)
+      throw new NotFoundException('Issuer does not exist in this group');
+    if (issuerUser.role !== GroupMemberRole.LEADER) {
+      throw new BadRequestException('Only a leader can add new members.');
     }
 
     const newMembers = [];
@@ -52,12 +61,21 @@ export class GroupMemberService {
       }
 
       const existingMember =
-        await this.groupMemberRepository.findGroupMemberById(memberId);
+        await this.groupMemberRepository.findGroupMemberByGroupAndUser(
+          groupChatEntity,
+          foundMember,
+        );
       if (existingMember) {
         throw new BadRequestException(
           'User is already a member of this group.',
         );
       }
+
+      const isFriend = await this.friendshipRepository.getOneFriend(
+        issuer,
+        memberId,
+      );
+      if (!isFriend) throw new BadRequestException('User must be your friend!');
 
       const newGroupMember =
         await this.groupMemberRepository.createNewGroupMember(
@@ -80,18 +98,24 @@ export class GroupMemberService {
   ): Promise<RemoveMemberEventPayload> {
     const { groupChatId, issuer, groupMemberId } = removeMemberData;
 
-    const issuerUser =
-      await this.groupMemberRepository.findGroupMemberById(issuer);
-    if (!issuerUser)
-      throw new NotFoundException('Issuer does not exist in this group');
-    if (issuerUser.role !== GroupMemberRole.LEADER) {
-      throw new BadRequestException('Only a leader can remove a member.');
-    }
-
     const groupChatEntity =
       await this.groupChatRepository.findGroupChatById(groupChatId);
     if (!groupChatEntity) {
       throw new BadRequestException('Group chat does not exist.');
+    }
+
+    const foundIssuer = await this.userRepository.findOneById(issuer);
+    if (!foundIssuer) throw new BadRequestException('Issuer does not exist!');
+
+    const issuerUser =
+      await this.groupMemberRepository.findGroupMemberByGroupAndUser(
+        groupChatEntity,
+        foundIssuer,
+      );
+    if (!issuerUser)
+      throw new NotFoundException('Issuer does not exist in this group');
+    if (issuerUser.role !== GroupMemberRole.LEADER) {
+      throw new BadRequestException('Only a leader can remove a member.');
     }
 
     const groupMember =
@@ -100,10 +124,7 @@ export class GroupMemberService {
       throw new NotFoundException('User is not a member of the group.');
     }
 
-    await this.groupMemberRepository.deleteGroupMember(
-      groupMember,
-      groupChatEntity,
-    );
+    await this.groupMemberRepository.deleteGroupMember(groupMember);
 
     return {
       groupChat: groupChatEntity,
@@ -157,10 +178,7 @@ export class GroupMemberService {
       }
     }
 
-    await this.groupMemberRepository.deleteGroupMember(
-      groupMember,
-      groupChatEntity,
-    );
+    await this.groupMemberRepository.deleteGroupMember(groupMember);
 
     return {
       groupChat: groupChatEntity,

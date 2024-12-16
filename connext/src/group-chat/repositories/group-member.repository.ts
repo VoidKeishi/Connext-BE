@@ -82,13 +82,6 @@ export class GroupMemberRepository {
       .leftJoinAndSelect('groupmember.user_id', 'user')
       .leftJoinAndSelect('groupmember.group_id', 'group')
       .where('groupmember.group_member_id = :id', { id: groupMemberId })
-      .select([
-        'user.userId',
-        'user.username',
-        'user.avatarUrl',
-        'group.group_id',
-        'group.group_name',
-      ])
       .getOne();
     return foundGroupMember;
   }
@@ -120,7 +113,7 @@ export class GroupMemberRepository {
     return await this.findGroupMemberById(groupMemberId);
   }
 
-  async deleteGroupMember(groupMember: GroupMember, groupChat: GroupChat) {
+  async deleteGroupMember(groupMember: GroupMember) {
     const deletedResult = await this.groupMemberRepository
       .createQueryBuilder()
       .delete()
@@ -130,23 +123,6 @@ export class GroupMemberRepository {
       })
       .execute();
 
-    groupChat.groupMembers = groupChat.groupMembers.filter(
-      (member) => member.group_member_id !== groupMember.group_member_id,
-    );
-    await this.groupChatRepository.save(groupChat);
-
-    const foundUser = await this.userRepository.findOne({
-      where: { userId: groupMember.user_id.userId },
-    });
-    foundUser.groupMembers = foundUser.groupMembers.filter(
-      (member) => member.group_member_id !== groupMember.group_member_id,
-    );
-    await this.userRepository.save(foundUser);
-
-    console.log(
-      '🚀 ~ GroupMemberRepository ~ deleteGroupMember ~ deletedResult:',
-      deletedResult,
-    );
     return deletedResult;
   }
 }
