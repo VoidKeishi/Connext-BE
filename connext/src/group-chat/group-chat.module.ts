@@ -14,11 +14,13 @@ import { GroupMemberService } from './services/group-member.service';
 import { GroupMessageController } from './controllers/group-message.controller';
 import { GroupMessageService } from './services/group-message.service';
 import { GroupMessageRepository } from './repositories/group-message.repository';
+import { FriendsModule } from 'src/friends/friends.module';
 
 @Module({
   imports: [
     UsersModule,
     TypeOrmModule.forFeature([GroupChat, GroupMember, GroupMessage, User]),
+    FriendsModule,
   ],
   controllers: [
     GroupChatController,
