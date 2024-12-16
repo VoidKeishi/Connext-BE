@@ -34,9 +34,11 @@ export class FriendsController {
 
   @Post('/accept-friend-request')
   async acceptFriendRequest(
+    @Req() request: Request,
     @Body() responseFriendRequestData: ResponseFriendRequestDto,
   ) {
     const newConversation = await this.friendsService.acceptFriendRequest({
+      issuer: request['user'].userId,
       friendRequestId: responseFriendRequestData.friendRequestId,
     });
     this.eventEmitter.emit(FRIEND_EVENT.ACCEPT_FRIEND_REQUEST, {
@@ -47,19 +49,31 @@ export class FriendsController {
 
   @Post('/reject-friend-request')
   async rejectFriendRequest(
+    @Req() request: Request,
     @Body() responseFriendRequestData: ResponseFriendRequestDto,
   ) {
     const responseResult = await this.friendsService.rejectFriendRequest({
+      issuer: request['user'].userId,
       friendRequestId: responseFriendRequestData.friendRequestId,
     });
     return responseResult;
   }
 
-  @Get('/friend-requests')
-  async getFriendRequest(@Req() request: Request) {
-    const friendRequests = await this.friendshipRepository.getFriendRequests(
-      request['user'].userId,
-    );
+  @Get('/received-friend-requests')
+  async getReceivedFriendRequests(@Req() request: Request) {
+    const friendRequests =
+      await this.friendshipRepository.getReceivedFriendRequests(
+        request['user'].userId,
+      );
+    return friendRequests;
+  }
+
+  @Get('/sent-friend-requests')
+  async getSentFriendRequest(@Req() request: Request) {
+    const friendRequests =
+      await this.friendshipRepository.getSentFriendRequests(
+        request['user'].userId,
+      );
     return friendRequests;
   }
 
