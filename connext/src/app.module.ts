@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { GatewaysModule } from './gateways/gateways.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConversationModule } from './conversation/conversation.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ConversationModule } from './conversation/conversation.module';
     UsersModule,
     GatewaysModule,
     ConversationModule,
+    UploadsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

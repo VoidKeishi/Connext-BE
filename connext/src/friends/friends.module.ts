@@ -15,5 +15,6 @@ import { FriendshipRepository } from './repositories/friendship.repository';
   ],
   controllers: [FriendsController],
   providers: [FriendsService, FriendshipRepository],
+  exports: [FriendshipRepository],
 })
 export class FriendsModule {}
