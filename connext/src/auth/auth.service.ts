@@ -2,11 +2,12 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import * as bcrypt from 'bcrypt';
-import { jwtSign } from './jwt.strategy';
+import { jwtSign, verifyToken } from './jwt.strategy';
 import { excludeObjectKeys } from 'src/common/utils/excludeObjectKeys';
 import {
   ACCESS_TOKEN_EXPIRE,
@@ -118,6 +119,34 @@ export class AuthService {
       refreshToken,
       user: userWithoutPassword,
     };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = verifyToken(refreshToken, this.REFRESH_TOKEN_KEY);
+      const foundUser = await this.userRepository.findOneById(
+        payload['userId'],
+      );
+      if (!foundUser)
+        throw new BadRequestException('This refresh token is incorrect!');
+
+      const newTokenPayload = {
+        userId: foundUser.userId,
+        username: foundUser.username,
+        email: foundUser.email,
+        role: foundUser.role,
+      };
+
+      const accessToken = jwtSign(
+        newTokenPayload,
+        this.ACCESS_TOKEN_KEY,
+        ACCESS_TOKEN_EXPIRE,
+      );
+      return accessToken;
+    } catch (error) {
+      console.log('🚀 ~ AuthService ~ refreshToken ~ error:', error);
+      throw new UnauthorizedException('Refresh token expired!');
+    }
   }
 
   async logout(userId: number) {
