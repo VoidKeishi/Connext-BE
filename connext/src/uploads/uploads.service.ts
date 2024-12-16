@@ -49,8 +49,10 @@ export class UploadsService {
     const getCommand = new GetObjectCommand(getObjectParams);
     const url = await getSignedUrl(this.S3, getCommand, { expiresIn: 3600 });
     return {
+      fileOriginalName: file.originalname,
       fileName: fileName,
       fileUrl: url,
+      fileType: file.mimetype,
     };
   }
 
