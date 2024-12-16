@@ -32,7 +32,7 @@ export class GroupChat {
   @JoinColumn({ name: 'created_by' })
   created_by: User;
 
-  @OneToMany(() => GroupMember, (groupChat) => groupChat.group_id)
+  @OneToMany(() => GroupMember, (groupMember) => groupMember.group_id)
   groupMembers: GroupMember[];
 
   @OneToMany(() => GroupMessage, (groupMessage) => groupMessage.group_id)

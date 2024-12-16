@@ -17,7 +17,7 @@ import { GROUP_CHAT_EVENT } from 'src/common/constants/event.constant';
 import { UpdateGroupChatDto } from '../dto/update-group-chat.dto';
 import { Request } from 'express';
 
-@Controller('group-chat')
+@Controller('group-chats')
 @UseGuards(AuthGuard)
 export class GroupChatController {
   constructor(
@@ -33,14 +33,14 @@ export class GroupChatController {
     return foundGroupChats;
   }
 
-  @Get('/:groupChatId')
+  @Get(':groupChatId')
   async getGroupChatDetail(@Param(new ParseIntPipe()) groupChatId: number) {
     const foundGroupChat =
       await this.groupChatService.getGroupChatDetail(groupChatId);
     return foundGroupChat;
   }
 
-  @Post('new-group-chat')
+  @Post('new')
   async createNewGroupChat(
     @Req() request: Request,
     @Body() createGroupChatData: CreateGroupChatDto,

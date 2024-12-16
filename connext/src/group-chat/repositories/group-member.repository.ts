@@ -21,9 +21,13 @@ export class GroupMemberRepository {
     groupChat: GroupChat,
     user: User,
   ): Promise<GroupMember | null> {
-    const foundGroupMember = await this.groupMemberRepository.findOne({
-      where: { user_id: user, group_id: groupChat },
-    });
+    const foundGroupMember = await this.groupMemberRepository
+      .createQueryBuilder('groupmember')
+      .leftJoinAndSelect('groupmember.group_id', 'group')
+      .leftJoinAndSelect('groupmember.user_id', 'user')
+      .where('group.group_id = :groupId', { groupId: groupChat.group_id })
+      .andWhere('user.user_id = :userId', { userId: user.userId })
+      .getOne();
     return foundGroupMember;
   }
 
@@ -79,13 +83,13 @@ export class GroupMemberRepository {
       .leftJoinAndSelect('groupmember.group_id', 'group')
       .where('groupmember.group_member_id = :id', { id: groupMemberId })
       .select([
-        'user.user_id',
+        'user.userId',
         'user.username',
-        'user.avatar_url',
+        'user.avatarUrl',
         'group.group_id',
         'group.group_name',
       ])
-      .execute();
+      .getOne();
     return foundGroupMember;
   }
 
@@ -101,15 +105,6 @@ export class GroupMemberRepository {
     newGroupMember.joined_at = new Date();
     const newGroupMemberCreated =
       await this.groupMemberRepository.save(newGroupMember);
-
-    groupChat.groupMembers = [...groupChat.groupMembers, newGroupMemberCreated];
-    await this.groupChatRepository.save(groupChat);
-
-    groupMember.groupMembers = [
-      ...groupMember.groupMembers,
-      newGroupMemberCreated,
-    ];
-    await this.userRepository.save(groupMember);
 
     return newGroupMemberCreated;
   }

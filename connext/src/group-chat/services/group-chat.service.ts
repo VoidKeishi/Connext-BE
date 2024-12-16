@@ -62,6 +62,11 @@ export class GroupChatService {
   ): Promise<CreateGroupChatEventPayload> {
     const { createdBy, members } = newGroupChatData;
 
+    if (members.length < 2)
+      throw new BadRequestException(
+        'Need at least two members to create new group',
+      );
+
     if (members.includes(createdBy))
       throw new BadRequestException('Can not invite yourself to new group');
 
@@ -78,7 +83,7 @@ export class GroupChatService {
       members.map(async (memberId) => {
         const user = await this.userRepository.findOneById(memberId);
         if (!user) {
-          throw new NotFoundException(`user not found`);
+          throw new NotFoundException(`User not found`);
         }
         return user;
       }),
@@ -111,6 +116,7 @@ export class GroupChatService {
       );
       groupMembers.push(newMember);
     }
+    console.log('🚀 ~ GroupChatService ~ groupMembers:', groupMembers);
 
     return {
       groupChat: newGroupChat,
