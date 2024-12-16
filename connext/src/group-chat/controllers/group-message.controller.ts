@@ -16,14 +16,14 @@ export class GroupMessageController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  @Post('/get-messages')
+  @Post('get-messages')
   async getGroupMessages(@Body() getGroupMessageDto: GetGroupMessageDto) {
     const response =
       await this.groupMessageService.getGroupMessages(getGroupMessageDto);
     return response;
   }
 
-  @Post('/send-message')
+  @Post('send-message')
   async createNewGroupMessage(
     @Req() request: Request,
     @Body() newGroupMessageData: NewGroupMessageDto,
@@ -39,10 +39,7 @@ export class GroupMessageController {
     const response =
       await this.groupMessageService.createNewGroupMessage(newGroupMessage);
 
-    this.eventEmitter.emit(
-      GROUP_MESSAGE_EVENT.SEND_GROUP_MESSAGE,
-      response.groupMessage,
-    );
+    this.eventEmitter.emit(GROUP_MESSAGE_EVENT.SEND_GROUP_MESSAGE, response);
 
     return response;
   }
