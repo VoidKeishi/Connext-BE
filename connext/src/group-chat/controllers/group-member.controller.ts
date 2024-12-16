@@ -41,7 +41,7 @@ export class GroupMemberController {
     );
   }
 
-  @Post('/add-new-members')
+  @Post('/add')
   async addNewMembers(
     @Req() request: Request,
     @Body() addNewMembersData: AddNewMemberDto,
@@ -57,7 +57,7 @@ export class GroupMemberController {
     return newMembersData;
   }
 
-  @Post('/remove-member')
+  @Post('/remove')
   async removeGroupMember(
     @Req() request: Request,
     @Body() removeMemberData: RemoveMemberDto,
