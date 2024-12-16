@@ -12,18 +12,15 @@ export class GroupMessageRepository {
   constructor(
     @InjectRepository(GroupMessage)
     private readonly groupMessageRepository: Repository<GroupMessage>,
-    @InjectRepository(GroupChat)
-    private readonly groupChatRepository: Repository<GroupChat>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
   ) {}
 
   async countGroupMessagesByConversation(
     groupChat: GroupChat,
   ): Promise<number> {
-    return await this.groupMessageRepository.findAndCount({
-      where: { group_id: groupChat },
-    })[1];
+    return await this.groupMessageRepository
+      .createQueryBuilder('groupmessage')
+      .where('groupmessage.group_id = :id', { id: groupChat.group_id })
+      .getCount();
   }
 
   async getGroupMessagesPaginated(
@@ -32,12 +29,22 @@ export class GroupMessageRepository {
     return await this.groupMessageRepository
       .createQueryBuilder('groupmessage')
       .leftJoinAndSelect('groupmessage.group_id', 'groupchat')
+      .leftJoinAndSelect('groupmessage.sender_id', 'sender')
       .where('groupchat.group_id = :id', {
         id: params.groupChatId,
       })
-      .offset(params.offset)
-      .limit(params.limit)
+      .skip(params.offset)
+      .take(params.limit)
       .getMany();
+  }
+
+  async getGroupMessageByMessageId(messageId: number): Promise<GroupMessage> {
+    return await this.groupMessageRepository
+      .createQueryBuilder('groupmessage')
+      .leftJoinAndSelect('groupmessage.sender_id', 'sender')
+      .where('groupmessage.message_id = :id', { id: messageId })
+      .select(['sender.userId', 'sender.username', 'sender.avatarUrl'])
+      .getOne();
   }
 
   async createNewGroupMessage(
@@ -54,15 +61,10 @@ export class GroupMessageRepository {
     newGroupMessage.timestamp = new Date();
     const newGroupMessageCreated =
       await this.groupMessageRepository.save(newGroupMessage);
-
-    groupChat.groupMessages = [
-      ...groupChat.groupMessages,
+    console.log(
+      '🚀 ~ GroupMessageRepository ~ newGroupMessageCreated:',
       newGroupMessageCreated,
-    ];
-    await this.groupChatRepository.save(groupChat);
-
-    sender.groupMessages = [...sender.groupMessages, newGroupMessageCreated];
-    await this.userRepository.save(sender);
+    );
 
     return newGroupMessageCreated;
   }

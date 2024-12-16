@@ -9,11 +9,13 @@ import { GroupChatRepository } from '../repositories/group-chat.repository';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { SendGroupMessageEventPayload } from 'src/common/types';
 import { IGetGroupMessageParams } from '../interfaces/get-group-message.interface';
+import { GroupMemberRepository } from '../repositories/group-member.repository';
 
 @Injectable()
 export class GroupMessageService {
   constructor(
     private readonly groupMessageRepository: GroupMessageRepository,
+    private readonly groupMemberRepository: GroupMemberRepository,
     private readonly groupChatRepository: GroupChatRepository,
     private readonly userRepository: UserRepository,
   ) {}
@@ -63,15 +65,21 @@ export class GroupMessageService {
       throw new BadRequestException('User not found');
     }
 
+    const isGroupMember =
+      await this.groupMemberRepository.findGroupMemberByGroupId(
+        groupChat.group_id,
+      );
+    if (!isGroupMember)
+      throw new BadRequestException('Sender is not a group member!');
+
     const newMessage = await this.groupMessageRepository.createNewGroupMessage(
       groupChat,
       sender,
       newGroupMessageData,
     );
-    const response: SendGroupMessageEventPayload = {
+
+    return {
       groupMessage: newMessage,
     };
-
-    return response;
   }
 }
