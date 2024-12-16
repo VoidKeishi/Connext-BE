@@ -46,17 +46,16 @@ export class GroupChatRepository {
   }
 
   async createNewGroupChat(createdBy: User): Promise<GroupChat> {
-    // Create and save new groupchat
     const newGroupChat = new GroupChat();
     newGroupChat.created_by = createdBy;
     const newGroupChatCreated =
       await this.groupChatRepository.save(newGroupChat);
 
-    // Add this new groupchat to user's groups field
-    createdBy.groups = [...createdBy.groups, newGroupChatCreated];
-    await this.userRepository.save(createdBy);
+    const foundNewGroupChat = await this.findGroupChatById(
+      newGroupChatCreated.group_id,
+    );
 
-    return newGroupChatCreated;
+    return foundNewGroupChat;
   }
 
   async updateGroupChatName(

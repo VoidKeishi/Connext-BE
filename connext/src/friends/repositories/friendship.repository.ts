@@ -20,13 +20,13 @@ export class FriendshipRepository {
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'user')
       .leftJoinAndSelect('friendship.friend_user_id', 'friend')
-      .where('user.user_id = :userId or friend.user_id = :friendUserId', {
+      .where('user.user_id = :userId AND friend.user_id = :friendUserId', {
         userId: userId,
         friendUserId: friendUserId,
       })
-      .orWhere('user.user_id = :userId or friend.user_id = :friendUserId', {
-        userId: friendUserId,
-        friendUserId: userId,
+      .orWhere('user.user_id = :friendUserId AND friend.user_id = :userId', {
+        userId: userId,
+        friendUserId: friendUserId,
       })
       .andWhere('friendship.status = :status', {
         status: FRIENDSHIP_STATUS.FRIEND,
