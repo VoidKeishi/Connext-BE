@@ -49,6 +49,10 @@ export class AuthService {
       throw new BadRequestException(ErrorsConstant.ERROR_INVALID_CREDENTIALS);
     }
 
+    const updatedUser = await this.userRepository.updateUser(user.userId, {
+      isOnline: true,
+    });
+
     const payload = {
       userId: user.userId,
       username: user.username,
@@ -67,7 +71,9 @@ export class AuthService {
       REFRESH_TOKEN_EXPIRE,
     );
 
-    const userWithoutPassword = excludeObjectKeys(user, ['passwordHashed']);
+    const userWithoutPassword = excludeObjectKeys(updatedUser, [
+      'passwordHashed',
+    ]);
 
     return {
       accessToken,
@@ -84,12 +90,20 @@ export class AuthService {
       throw new BadRequestException(ErrorsConstant.ERROR_USER_ALREADY_EXISTS);
     }
 
+    const existingUsername = await this.userRepository.findOneByUserName(
+      signUpData.username,
+    );
+    if (existingUsername) {
+      throw new BadRequestException('Username already exist!');
+    }
+
     const hashedPassword = await bcrypt.hash(signUpData.password, 10);
 
     const newUserData = {
       email: signUpData.email,
       username: signUpData.username,
       passwordHashed: hashedPassword,
+      isOnline: true,
       role: Role.User,
     };
     const newUser = await this.userRepository.createNewUser(newUserData);
