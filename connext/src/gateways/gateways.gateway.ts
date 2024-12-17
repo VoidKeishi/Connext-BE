@@ -30,6 +30,7 @@ import {
   GROUP_MESSAGE_EVENT,
   MESSAGE_EVENT,
 } from 'src/common/constants/event.constant';
+import { UserRepository } from 'src/users/repositories/user.repository';
 
 @WebSocketGateway({
   cors: {
@@ -42,7 +43,10 @@ import {
 export class GatewaysGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly gatewaySession: GatewaySessions) {}
+  constructor(
+    private readonly gatewaySession: GatewaySessions,
+    private readonly userRepository: UserRepository,
+  ) {}
 
   @WebSocketServer()
   server: Server;
@@ -50,12 +54,14 @@ export class GatewaysGateway
   handleConnection(socket: AuthenticatedSocket, ..._args: any[]) {
     console.log('Incoming Connection');
     this.gatewaySession.setSocket(socket.user.userId, socket);
+    this.userRepository.updateUser(socket.user.userId, { isOnline: true });
     console.log(`Client ${socket.user.userId} connected!`);
     console.log('Client connected!!!');
   }
 
   handleDisconnect(socket: AuthenticatedSocket) {
     this.gatewaySession.removeSocket(socket.user.userId);
+    this.userRepository.updateUser(socket.user.userId, { isOnline: false });
     console.log(`Client ${socket.user.userId} disconnected!`);
     console.log('Client disconnected!!!');
   }

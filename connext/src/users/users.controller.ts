@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,16 +22,31 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  async findManyUsers(@Query() findManyUsersData: FindManyUserDto) {
+  async findManyUsers(
+    @Req() request: Request,
+    @Query() findManyUsersData: FindManyUserDto,
+  ) {
     return await this.usersService.findManyUsers(
+      request['user'].userId,
       findManyUsersData.limit,
       findManyUsersData.offset,
     );
   }
 
+  @Get('check-online')
+  async checkUserOnlineStatus(@Req() request: Request) {
+    return await this.usersService.checkUserOnlineStatus(
+      request['user'].userId,
+    );
+  }
+
   @Get('/search')
-  async searchUsers(@Query() searchUserData: SearchUserDto) {
+  async searchUsers(
+    @Req() request: Request,
+    @Query() searchUserData: SearchUserDto,
+  ) {
     return await this.usersService.searchUsers(
+      request['user'].userId,
       searchUserData.query,
       searchUserData.limit,
       searchUserData.offset,
