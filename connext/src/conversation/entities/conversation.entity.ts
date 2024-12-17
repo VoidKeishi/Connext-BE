@@ -25,7 +25,7 @@ export class Conversation {
   @Column('text', { default: 'Lets say hi to each other!' })
   last_message: string;
 
-  @Column('date', { nullable: true })
+  @Column('timestamp', { nullable: true })
   last_message_sent_at: Date;
 
   @OneToMany(() => Message, (message) => message.conversation_id)

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { Friendship } from '../entities/friendship.entity';
 import { FRIENDSHIP_STATUS } from 'src/common/enum/friendship-status.enum';
 
@@ -54,8 +54,14 @@ export class FriendshipRepository {
       .createQueryBuilder('friendship')
       .leftJoinAndSelect('friendship.user_id', 'user')
       .leftJoinAndSelect('friendship.friend_user_id', 'friend')
-      .where('user.user_id = :userId', { userId: userId })
-      .orWhere('friend.user_id = :userId', { userId: userId })
+      .where(
+        new Brackets((qb) => {
+          qb.where('user.user_id = :userId', { userId }).orWhere(
+            'friend.user_id = :userId',
+            { userId },
+          );
+        }),
+      )
       .andWhere('friendship.status = :status', {
         status: FRIENDSHIP_STATUS.FRIEND,
       })
