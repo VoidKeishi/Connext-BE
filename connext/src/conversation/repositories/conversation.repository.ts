@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { Conversation } from '../entities/conversation.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { IGetConversations } from '../interfaces/get-conversations.interface';
 
 @Injectable()
 export class ConversationRepository {
@@ -33,8 +34,10 @@ export class ConversationRepository {
     return foundConversation;
   }
 
-  async getConversations(userId: number): Promise<Conversation[]> {
-    const foundConversations = await this.conversationRepostitory
+  async getConversationsPaginated(
+    getConversationsData: IGetConversations,
+  ): Promise<[Conversation[], number]> {
+    const query = this.conversationRepostitory
       .createQueryBuilder('conversation')
       .leftJoinAndSelect(
         'conversation.first_participant_id',
@@ -44,8 +47,15 @@ export class ConversationRepository {
         'conversation.second_participant_id',
         'second_participant',
       )
-      .where('first_participant.user_id = :userId', { userId: userId })
-      .orWhere('second_participant.user_id = :userId', { userId: userId })
+      .where(
+        new Brackets((qb) => {
+          qb.where('first_participant.user_id = :userId', {
+            userId: getConversationsData.userId,
+          }).orWhere('second_participant.user_id = :userId', {
+            userId: getConversationsData.userId,
+          });
+        }),
+      )
       .select([
         'conversation',
         'first_participant.userId',
@@ -57,9 +67,12 @@ export class ConversationRepository {
         'second_participant.avatar_url',
         'second_participant.is_online',
       ])
-      .getMany();
+      .orderBy('conversation.last_message_sent_at', 'DESC')
+      .skip((getConversationsData.offset - 1) * getConversationsData.limit)
+      .take(getConversationsData.limit);
 
-    return foundConversations;
+    const [conversations, total] = await query.getManyAndCount();
+    return [conversations, total];
   }
 
   async createNewConversation(
@@ -67,7 +80,7 @@ export class ConversationRepository {
     secondParticipant: User,
   ): Promise<Conversation> {
     const newConversation = new Conversation();
-    newConversation.last_message_sent_at = null;
+    newConversation.last_message_sent_at = new Date();
     newConversation.first_participant_id = firstParticipant;
     newConversation.second_participant_id = secondParticipant;
     const newConversationData =
