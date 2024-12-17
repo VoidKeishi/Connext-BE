@@ -11,6 +11,7 @@ import { GatewaysModule } from './gateways/gateways.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConversationModule } from './conversation/conversation.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -47,5 +48,6 @@ import { UploadsModule } from './uploads/uploads.module';
     ConversationModule,
     UploadsModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
