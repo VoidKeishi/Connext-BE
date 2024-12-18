@@ -31,8 +31,8 @@ export class MessageRepository {
       .where('conversation.conversation_id = :conversationId', {
         conversationId: params.conversationId,
       })
-      .offset(params.offset)
-      .limit(params.limit)
+      .skip(params.offset)
+      .take(params.limit)
       .getMany();
   }
 

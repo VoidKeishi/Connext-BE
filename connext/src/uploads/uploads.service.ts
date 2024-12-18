@@ -18,10 +18,11 @@ export class UploadsService {
   private S3: S3Client;
 
   constructor(private readonly configService: ConfigService) {
-    this.BUCKET_NAME = configService.get<string>('BUCKET_NAME');
-    this.BUCKET_REGION = configService.get<string>('BUCKET_REGION');
-    this.ACCESS_KEY = configService.get<string>('ACCESS_KEY');
-    this.SECRET_ACCESS_KEY = configService.get<string>('SECRET_ACCESS_KEY');
+    this.BUCKET_NAME = this.configService.get<string>('BUCKET_NAME');
+    this.BUCKET_REGION = this.configService.get<string>('BUCKET_REGION');
+    this.ACCESS_KEY = this.configService.get<string>('ACCESS_KEY');
+    this.SECRET_ACCESS_KEY =
+      this.configService.get<string>('SECRET_ACCESS_KEY');
     this.S3 = new S3Client({
       credentials: {
         accessKeyId: this.ACCESS_KEY,
@@ -47,7 +48,9 @@ export class UploadsService {
       Key: fileName,
     };
     const getCommand = new GetObjectCommand(getObjectParams);
-    const url = await getSignedUrl(this.S3, getCommand, { expiresIn: 3600 });
+    const url = await getSignedUrl(this.S3, getCommand, {
+      expiresIn: 7 * 24 * 60 * 60,
+    });
     return {
       fileOriginalName: file.originalname,
       fileName: fileName,
