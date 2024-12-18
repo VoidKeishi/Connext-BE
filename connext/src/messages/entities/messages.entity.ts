@@ -1,5 +1,6 @@
 import { MEDIA_TYPE } from 'src/common/enum/media-type.enum';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -17,6 +18,10 @@ export class Message {
   @ManyToOne(() => Conversation, (conversation) => conversation.messages)
   @JoinColumn({ name: 'conversation_id' })
   conversation_id: Conversation;
+
+  @ManyToOne(() => User, (user) => user.messages)
+  @JoinColumn({ name: 'sender_id' })
+  sender_id: User;
 
   @Column('text')
   content: string;
