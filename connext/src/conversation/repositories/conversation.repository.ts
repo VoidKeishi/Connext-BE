@@ -60,12 +60,12 @@ export class ConversationRepository {
         'conversation',
         'first_participant.userId',
         'first_participant.username',
-        'first_participant.avatar_url',
-        'first_participant.is_online',
+        'first_participant.avatarUrl',
+        'first_participant.isOnline',
         'second_participant.userId',
         'second_participant.username',
-        'second_participant.avatar_url',
-        'second_participant.is_online',
+        'second_participant.avatarUrl',
+        'second_participant.isOnline',
       ])
       .orderBy('conversation.last_message_sent_at', 'DESC')
       .skip((getConversationsData.offset - 1) * getConversationsData.limit)
