@@ -54,6 +54,8 @@ export class MessagesService {
     if (!foundConversation)
       throw new NotFoundException('No conversation found!');
 
+    const foundSender = await this.userRespository.findOneById(data.senderId);
+
     const foundRecipient = await this.userRespository.findOneById(
       data.recipientId,
     );
@@ -78,6 +80,7 @@ export class MessagesService {
     const newMessage = await this.messageRepository.createNewMessage(
       data,
       foundConversation,
+      foundSender,
     );
 
     return {

@@ -4,6 +4,7 @@ import { Friendship } from 'src/friends/entities/friendship.entity';
 import { GroupChat } from 'src/group-chat/entities/group-chat.entity';
 import { GroupMember } from 'src/group-chat/entities/group-member.entity';
 import { GroupMessage } from 'src/group-chat/entities/group-message.entity';
+import { Message } from 'src/messages/entities/messages.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -62,6 +63,9 @@ export class User {
     (conversation) => conversation.second_participant_id,
   )
   recipients: Conversation[];
+
+  @OneToMany(() => Message, (message) => message.sender_id)
+  messages: Message[];
 
   @OneToMany(() => Friendship, (friendship) => friendship.user_id)
   users: Friendship[];

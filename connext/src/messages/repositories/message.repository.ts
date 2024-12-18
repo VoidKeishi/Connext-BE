@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Conversation } from 'src/conversation/entities/conversation.entity';
 import { INewMessage } from '../interfaces/new-message.interface';
 import { IGetMessageParams } from '../interfaces/get-message.interface';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class MessageRepository {
@@ -26,6 +27,7 @@ export class MessageRepository {
     return await this.messageRepository
       .createQueryBuilder('message')
       .leftJoinAndSelect('message.conversation_id', 'conversation')
+      .leftJoinAndSelect('message.sender_id', 'sender')
       .where('conversation.conversation_id = :conversationId', {
         conversationId: params.conversationId,
       })
@@ -34,12 +36,17 @@ export class MessageRepository {
       .getMany();
   }
 
-  async createNewMessage(data: INewMessage, conversation: Conversation) {
+  async createNewMessage(
+    data: INewMessage,
+    conversation: Conversation,
+    sender: User,
+  ) {
     const message = new Message();
     message.content = data.content;
     message.media_url = data.mediaUrl;
     message.media_type = data.mediaType;
     message.conversation_id = conversation;
+    message.sender_id = sender;
     const newMessage = await this.messageRepository.save(message);
 
     conversation.last_message = newMessage.content;
