@@ -166,12 +166,13 @@ export class UserRepository {
   }
 
   async updateUser(userId: number, updateUserData: UpdateUserDto) {
-    return await this.userRepository
+    await this.userRepository
       .createQueryBuilder()
       .update(User)
       .set(updateUserData)
       .where('user_id = :userId', { userId })
       .execute();
+    return await this.userRepository.findOne({ where: { userId: userId } });
   }
 
   async deleteUser(userId: number) {
