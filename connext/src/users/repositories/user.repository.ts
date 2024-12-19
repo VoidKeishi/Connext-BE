@@ -94,6 +94,26 @@ export class UserRepository {
       .getCount();
   }
 
+  async countTotalOnlineUser(): Promise<number> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.is_online = :value', { value: true })
+      .getCount();
+  }
+
+  async countUsersPerMonth(): Promise<any[]> {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .select([
+        'EXTRACT(MONTH FROM user.created_at) as month',
+        'EXTRACT(YEAR FROM user.created_at) as year',
+        'COUNT(*) as count',
+      ])
+      .groupBy('month, year')
+      .orderBy('year, month')
+      .getRawMany();
+  }
+
   async findManyUsers(
     userId: number,
     limit: number,

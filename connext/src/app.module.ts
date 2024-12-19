@@ -12,6 +12,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConversationModule } from './conversation/conversation.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { AppController } from './app.controller';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AppController } from './app.controller';
     GatewaysModule,
     ConversationModule,
     UploadsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
 })
