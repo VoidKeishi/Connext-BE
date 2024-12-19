@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   Put,
   Req,
@@ -34,9 +33,9 @@ export class GroupChatController {
   }
 
   @Get(':groupChatId')
-  async getGroupChatDetail(@Param(new ParseIntPipe()) groupChatId: number) {
+  async getGroupChatDetail(@Param('groupChatId') groupChatId: string) {
     const foundGroupChat =
-      await this.groupChatService.getGroupChatDetail(groupChatId);
+      await this.groupChatService.getGroupChatDetail(+groupChatId);
     return foundGroupChat;
   }
 
