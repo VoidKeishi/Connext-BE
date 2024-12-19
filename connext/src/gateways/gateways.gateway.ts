@@ -34,7 +34,12 @@ import { UserRepository } from 'src/users/repositories/user.repository';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:8085'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:8085',
+      'https://connext-fe.vercel.app/',
+      'https://connext-fe.vercel.app',
+    ],
     credentials: true,
   },
   pingInterval: 10000,
