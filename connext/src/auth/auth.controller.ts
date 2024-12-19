@@ -29,12 +29,14 @@ export class AuthController {
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: IS_COOKIE_SECURE,
+      sameSite: 'none',
       maxAge: COOKIE_ACCESS_TOKEN_MAX_AGE,
     });
 
     response.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: IS_COOKIE_SECURE,
+      sameSite: 'none',
       maxAge: COOKIE_REFRESH_TOKEN_MAX_AGE,
     });
 
@@ -48,12 +50,14 @@ export class AuthController {
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: IS_COOKIE_SECURE,
+      sameSite: 'none',
       maxAge: COOKIE_ACCESS_TOKEN_MAX_AGE,
     });
 
     response.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: IS_COOKIE_SECURE,
+      sameSite: 'none',
       maxAge: COOKIE_REFRESH_TOKEN_MAX_AGE,
     });
 
@@ -70,6 +74,7 @@ export class AuthController {
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: IS_COOKIE_SECURE,
+      sameSite: 'none',
       maxAge: COOKIE_ACCESS_TOKEN_MAX_AGE,
     });
     return response.status(201).json({ accessToken });
