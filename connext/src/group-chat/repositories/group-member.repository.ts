@@ -50,9 +50,11 @@ export class GroupMemberRepository {
   }
 
   async findGroupMemberByGroup(groupChat: GroupChat): Promise<GroupMember[]> {
-    const foundGroupMembers = await this.groupMemberRepository.find({
-      where: { group_id: groupChat },
-    });
+    const foundGroupMembers = await this.groupMemberRepository
+      .createQueryBuilder('groupmember')
+      .leftJoinAndSelect('groupmember.group_id', 'group')
+      .where('group.group_id = :id', { id: groupChat.group_id })
+      .getMany();
     return foundGroupMembers;
   }
 
