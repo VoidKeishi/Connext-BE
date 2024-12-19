@@ -114,6 +114,38 @@ export class UserRepository {
       .getRawMany();
   }
 
+  async countCurrentTotalUsers(status?: string): Promise<number> {
+    const query = this.userRepository.createQueryBuilder('user');
+
+    if (status === 'online') {
+      query.where('user.is_online = :value', { value: true });
+    } else if (status === 'offline') {
+      query.where('user.is_online = :value', { value: false });
+    }
+
+    return await query.getCount();
+  }
+
+  async findCurrentManyUsers(
+    limit: number,
+    offset: number,
+    status?: string,
+  ): Promise<User[]> {
+    const query = this.userRepository.createQueryBuilder('user');
+
+    if (status === 'online') {
+      query.where('user.is_online = :value', { value: true });
+    } else if (status === 'offline') {
+      query.where('user.is_online = :value', { value: false });
+    }
+
+    return await query
+      .skip((offset - 1) * limit)
+      .take(limit)
+      .orderBy('user_id', 'ASC')
+      .getMany();
+  }
+
   async findManyUsers(
     userId: number,
     limit: number,

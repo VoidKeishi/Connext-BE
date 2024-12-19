@@ -39,6 +39,7 @@ export class GroupChatController {
     return foundGroupChat;
   }
 
+  // /api/group-chats/new
   @Post('new')
   async createNewGroupChat(
     @Req() request: Request,
